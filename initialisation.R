@@ -18,20 +18,16 @@ prior$dispersion$p=c(min=0.001,max=0.5)
 
 
 rm(list=ls())
-wd="/home/dupas/Bureau/" # fixe
+wd="/home/legs/busseola/"
 setwd(wd)
-source.file=c("Laurianne.R")
-
+source("Laurianne.R");source("generic.R");source("methods.R")
 library(raster)
-
-environmentalData_ <- raster("AfrBfGAMActA.asc");environmentalData_[environmentalData_>200]=200
-environmentalData_2 <- trim(environmentalData_, padding=(8*dim(environmentalData_)%/%8)[1:2]) 
-environmentalData_2 <- aggregate(environmentalData_2,8)
+environmentalData <- raster("busseola.tif")
 genetData <- read.table("WBf16genelandcoord.txt")
 genetData <- cbind(genetData,read.table("WBf16genelandgeno.txt"))
 genetSP <- SpatialPoints(genetData[,c("x","y")])
 bbox(genetSP)
-environmentalData <- crop(environmentalData_2, bbox(genetSP)+res(environmentalData_2)*c(-2,-2,2,2))
+environmentalData <- crop(environmentalData, bbox(genetSP)+res(environmentalData_2)*c(-2,-2,2,2))
 genetData$Cell_numbers <- cellFromXY(environmentalData,genetData)
 environmentalData[environmentalData==0] <- NA
 ncellA(environmentalData)
@@ -45,3 +41,6 @@ genetData[is.na(genetData)] <- as.integer(1E9)
 genetData=genetData[rowSums(genetData[,grep("ocus",colnames(genetData),value=TRUE)])<7E9,]
 genetData[genetData==1E9]=NA
 genetData <- TwoCols2OneCol(genetData)
+
+
+
