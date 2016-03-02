@@ -17,8 +17,11 @@ prior$dispersion$distribution="uniform"
 prior$dispersion$p=c(min=0.001,max=0.5)
 
 
+
+
+
 rm(list=ls())
-wd="/home/legs/busseola/"
+wd="~/Documents/M1bi 2015 2016/stage/busseola/"
 setwd(wd)
 source("Laurianne.R");source("generic.R");source("method.R")
 library(raster)
@@ -38,15 +41,3 @@ plot(genetSP,add=TRUE)
 min(extract(environmentalData,genetData[,c("x","y")]))
 genetData[which(extract(environmentalData,genetData[,c("x","y")])<0.01),]
 genetData=cleanerData(genetData)
-
-
-cleanerData <-function(data) 
-  # take off rows wich have missing data by replace this missing data to false data
-{
-  data[is.na(data)] <- as.integer(1E9)
-data=data[rowSums(data[,grep("Locus",colnames(data),value=TRUE)])<7E9,]
-data[data==1E9]=NA
-data <- TwoCols2OneCol(data)
-
-}
-

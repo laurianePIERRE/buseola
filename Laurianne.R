@@ -1,4 +1,16 @@
 
+
+cleanerData <-function(data) 
+  # take off rows wich have missing data by replace this missing data to false data
+{
+  data[is.na(data)] <- as.integer(1E9)
+  data=data[rowSums(data[,grep("Locus",colnames(data),value=TRUE)])<7E9,]
+  data[data==1E9]=NA
+  data <- TwoCols2OneCol(data)
+  
+}
+
+
 TwoCols2OneCol <- function(tip_genotype)
 {
   nonGenotypeData <- tip_genotype[,!grepl("ocus",colnames(tip_genotype))]
@@ -56,6 +68,18 @@ ReactNorm <- function(X,p,shapes)
 }
 
 
+# populationSize: uses K_Function to obtain the populationsize landscape raster
+#
+#
+populationSize <- function(donneesEnvironmentObs, p, shapes)
+{
+  populationSize <- donneesEnvironmentObs
+  values(populationSize) <- ReactNorm(valules(donneesEnvironmentObs), p, shapes)[1,]
+  populationSize
+}
+
+
+
 # migrationMatrix return matrix of migration rate for each cell
 # From the raster Stack and the dispersal parameter pDisp (estimated),
 # this function calculates distance between all cells of raster
@@ -92,8 +116,28 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   return(migration)
 }
 
+
+
+
+enveloppe <- function(X,p)
+{
+  p[rep("Yopt",dim(X)[1]),colnames(X)]*((X>p[rep("Xmin",dim(X)[1]),])&(X<p[rep("Xmax",dim(X)[1]),colnames(X)]))
+}
+
+# envelope = linear response within an envelope
+# X : matrix or data frame providing the values of independent variable to calculate reaction norm
+# p : matrix parameter values for the reaction norm
+# line names of p used for caclculation : c("Xmin","Xmax","Yxmin","Yxmax"), 
+# column names of p : names of the independent variables of X used for the reaction norm calculation
+# [Xmin, Xmax] is the enveloppe, 
+# Yxmin and Yxmax are the values at Xmin and Xmax
+
+
 # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
-transitionMatrixBackward <- function(r,K, migration){
+transitionMatrixBackward <- function(rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp){
+  K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
+  r = ReactNorm(values(rasterStack),pR,shapesR)[,"Y"] 
+  migration <- migrationMatrix(rasterStack,shapeDisp, pDisp)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -105,7 +149,10 @@ transitionMatrixBackward <- function(r,K, migration){
   transition
 }
 
-
+sample <- function(prior) {
+  parametre=list(prior$K$p,prior$R$p,prior$K$distribution,prior$R$distribution,prior$dispersion$distribution,prior$dispersion$p)
+  return(parametre)
+}
 #
 # Absorbing transition matrix
 # Estimates probability of transition among transient and absorbant states
