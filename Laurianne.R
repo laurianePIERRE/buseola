@@ -26,7 +26,7 @@ TwoCols2OneCol <- function(tip_genotype)
   tip_genotype <- rbind(matrix_pair,matrix_impair)[rep(1:nrow(matrix_pair),each=2)+rep(c(nrow(matrix_pair),0),nrow(matrix_pair)),]
   tip_genotype
 }
-
+#
 
 proportional <- function(X,p,Log=FALSE)
 {
@@ -134,10 +134,13 @@ enveloppe <- function(X,p)
 
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
-transitionMatrixBackward <- function(rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp){
-  K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
-  r = ReactNorm(values(rasterStack),pR,shapesR)[,"Y"] 
-  migration <- migrationMatrix(rasterStack,shapeDisp, pDisp)
+transitionMatrixBackward(environmentalData,prior)
+# 
+transitionMatrixBackward <- function(rasterStack,prior){
+  listeSample=sampleP(prior)
+  K = ReactNorm(values(rasterStack),listeSample$K$p,listeSample$K$model)[,"Y"]
+  r = ReactNorm(values(rasterStack),listeSample$R$p,listeSample$R$model)[,"Y"] 
+  migration <- migrationMatrix(rasterStack,listeSample$dispersion$model, listeSample$dispersion$p)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -149,9 +152,24 @@ transitionMatrixBackward <- function(rasterStack,pK,pR,shapesK,shapesR,shapeDisp
   transition
 }
 
-sample <- function(prior) {
-  parametre=list(prior$K$p,prior$R$p,prior$K$distribution,prior$R$distribution,prior$dispersion$distribution,prior$dispersion$p)
-  return(parametre)
+(liste=sampleP(prior))
+# il faut que $p soit une data frame  colonne n de variable  une seule ligne a 
+### function to sample  
+sampleP <- function(prior) {
+  Result=list()
+  for(Names in names(prior)) {
+    Result[[Names]] <- list() 
+       Result[[Names]]$p <- switch(prior[[Names]]$distribution, 
+                                uniform=runif(1,min=prior[[Names]]$p[1],max=prior[[Names]]$p[2]),
+                                fixed =prior[[Names]]$p,
+                                normal=rnorm(1,mean=prior[[Names]]$p[1],sd=prior[[Names]]$p[2]),
+                                loguniform=log(runif(1,min=prior[[Names]]$p[1],max=prior[[Names]]$p[2])))
+    
+     Result[[Names]]$model <-  prior[[Names]]$model
+    
+  }  
+  
+  return(Result)
 }
 #
 # Absorbing transition matrix
