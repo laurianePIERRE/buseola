@@ -28,6 +28,10 @@ TwoCols2OneCol <- function(tip_genotype)
 }
 #
 
+## erreur : Erreur dans data.frame(value, row.names = rn, check.names = FALSE, check.rows = FALSE) : 
+#####row names supplied are of the wrong length
+
+
 proportional <- function(X,p,Log=FALSE)
 {
   if (Log) {log(p[rep("a",dim(X)[1]),colnames(X)]*X)} else {
@@ -153,17 +157,18 @@ transitionMatrixBackward <- function(rasterStack,prior){
 }
 
 (liste=sampleP(prior))
-# il faut que $p soit une data frame  colonne n de variable  une seule ligne a 
+
+# il faut que $p soit une data frame  colonne n de variable  une seule ligne a --> effectue dans Initialisation
 ### function to sample  
 sampleP <- function(prior) {
   Result=list()
   for(Names in names(prior)) {
     Result[[Names]] <- list() 
        Result[[Names]]$p <- switch(prior[[Names]]$distribution, 
-                                uniform=runif(1,min=prior[[Names]]$p[1],max=prior[[Names]]$p[2]),
-                                fixed =prior[[Names]]$p,
-                                normal=rnorm(1,mean=prior[[Names]]$p[1],sd=prior[[Names]]$p[2]),
-                                loguniform=log(runif(1,min=prior[[Names]]$p[1],max=prior[[Names]]$p[2])))
+                                uniform=runif(1,min=prior[[Names]]$p[1,1],max=prior[[Names]]$p[2,1]),
+                                fixed =prior[[Names]]$p[1,1],
+                                normal=rnorm(1,mean=prior[[Names]]$p[1,1],sd=prior[[Names]]$p[2,1]),
+                                loguniform=log(runif(1,min=prior[[Names]]$p[1,1],max=prior[[Names]]$p[2,1])))
     
      Result[[Names]]$model <-  prior[[Names]]$model
     
