@@ -28,8 +28,6 @@ TwoCols2OneCol <- function(tip_genotype)
 }
 #
 
-## erreur : Erreur dans data.frame(value, row.names = rn, check.names = FALSE, check.rows = FALSE) : 
-#####row names supplied are of the wrong length
 
 
 proportional <- function(X,p,Log=FALSE)
@@ -137,9 +135,9 @@ enveloppe <- function(X,p)
 # Yxmin and Yxmax are the values at Xmin and Xmax
 
 
-# transitionMatrix obtained with an isotropic migration hypothesis for a backward model
-transitionMatrixBackward(environmentalData,prior)
-# 
+
+# # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
+
 transitionMatrixBackward <- function(rasterStack,prior){
   listeSample=sampleP(prior)
   K = ReactNorm(values(rasterStack),listeSample$K$p,listeSample$K$model)[,"Y"]
@@ -156,7 +154,7 @@ transitionMatrixBackward <- function(rasterStack,prior){
   transition
 }
 
-(liste=sampleP(prior))
+
 
 # il faut que $p soit une data frame  colonne n de variable  une seule ligne a --> effectue dans Initialisation
 ### function to sample  

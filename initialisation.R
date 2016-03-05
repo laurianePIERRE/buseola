@@ -20,10 +20,10 @@ prior$dispersion$p=data.frame(a=c(min=0.001,max=0.5))
 
 
 
-rm(list=ls())
 wd="~/Documents/M1bi 2015 2016/stage/busseola/"
 setwd(wd)
-source("Laurianne.R");source("generic.R");source("method.R")
+source("Laurianne.R")
+source("generic.R");source("method.R")
 library(raster)
 library(rgdal) # necessary to use function raster()
 environmentalData <- raster("busseola.tif")
@@ -41,3 +41,5 @@ plot(genetSP,add=TRUE)
 min(extract(environmentalData,genetData[,c("x","y")]))
 genetData[which(extract(environmentalData,genetData[,c("x","y")])<0.01),]
 genetData=cleanerData(genetData)
+transitionMatrixBackward(environmentalData,prior)
+
