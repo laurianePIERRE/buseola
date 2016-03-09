@@ -39,6 +39,7 @@ proportional <- function(X,p,Log=FALSE)
 
 
 ReactNorm <- function(X,p,shapes)
+  
   # X is a matrix with the different environemental variables in column and the map cells in line
   # or a numeric vector
   #p=c(p["Xmin"]=10,p["Xmax"]=20,p["Xopt"]=18,p["Ymax"]=0.1)
@@ -138,7 +139,7 @@ enveloppe <- function(X,p)
 
 # # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
 
-transitionMatrixBackward <- function(rasterStack,prior){
+transitionMatrixBackward <- function(rasterStack=environmentalData,prior){
   listeSample=sampleP(prior)
   K = ReactNorm(values(rasterStack),listeSample$K$p,listeSample$K$model)[,"Y"]
   r = ReactNorm(values(rasterStack),listeSample$R$p,listeSample$R$model)[,"Y"] 
@@ -160,17 +161,19 @@ transitionMatrixBackward <- function(rasterStack,prior){
 ### function to sample  
 sampleP <- function(prior) {
   Result=list()
-  for(Names in names(prior)) {
-    Result[[Names]] <- list() 
-       Result[[Names]]$p <- switch(prior[[Names]]$distribution, 
-                                uniform=runif(1,min=prior[[Names]]$p[1,1],max=prior[[Names]]$p[2,1]),
-                                fixed =prior[[Names]]$p[1,1],
-                                normal=rnorm(1,mean=prior[[Names]]$p[1,1],sd=prior[[Names]]$p[2,1]),
-                                loguniform=log(runif(1,min=prior[[Names]]$p[1,1],max=prior[[Names]]$p[2,1])))
+  for(parametreBio in names(prior)) {
+    for (variableEnvironnemental in names(prior[[parametreBio]])) {
+        Result[[parametreBio]] <- list() 
+         Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution, 
+                                uniform=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
+                                fixed =prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],
+                                normal=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
+                                loguniform=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])))
     
-     Result[[Names]]$model <-  prior[[Names]]$model
-    
-  }  
+       Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
+      print(Result)
+    }
+  }
   
   return(Result)
 }

@@ -3,25 +3,29 @@
 
 # prior distributions
 prior=list()
-prior$K$distribution = "uniform"
-prior$K$model = c(K="proportional")
-prior$K$p = data.frame( a=c(min=0.001,max=0.5))
-prior$R$distribution = "fixed"
-prior$R$model = c(K="constant")
-prior$R$p = data.frame(a=20)
-prior$mutation_rate$model = "stepwise"
-prior$mutation_rate$distribution = "loguniform"
-prior$mutation_rate$p =data.frame(a=c(min=1E-6,max=1E-2))
-prior$dispersion$model="contiguous"
-prior$dispersion$distribution="uniform"
-prior$dispersion$p=data.frame(a=c(min=0.001,max=0.5))
+prior$K$busseola$a$distribution = "uniform"
+prior$K$busseola$model = c(K="proportional")
+prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
+prior$R$busseola$a$distribution = "fixed"
+prior$R$busseola$model = c(K="constant")
+prior$R$busseola$p$a = 20
+prior$mutation_rate$busseola$model = "stepwise"
+prior$mutation_rate$busseola$a$distribution = "loguniform"
+prior$mutation_rate$busseola$p$a =data.frame(c(min=1E-6,max=1E-2))
+prior$dispersion$busseola$model="contiguous"
+prior$dispersion$busseola$a$distribution="uniform"
+prior$dispersion$busseola$p$a=data.frame(c(min=0.001,max=0.5))
 
 # fixed uniform normal loguniform lognormal
 
 
 
 wd="~/Documents/M1bi 2015 2016/stage/busseola/"
+
+wd="~/Documents/Lauriane/busseola/"
+
 setwd(wd)
+
 source("Laurianne.R")
 source("generic.R");source("method.R")
 library(raster)
