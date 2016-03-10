@@ -83,6 +83,17 @@ populationSize <- function(donneesEnvironmentObs, p, shapes)
 
 
 
+# (optional) distanceMatrix return distance between all cells of raster
+distanceMatrix <- function(rasterStack){
+  #get x and y coordinates for each cell of raster object put in parameters
+  coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
+  distance = as.matrix(dist(coords)) # distance matrix of coordinates
+  return(distance)
+}
+
+
+
+
 # migrationMatrix return matrix of migration rate for each cell
 # From the raster Stack and the dispersal parameter pDisp (estimated),
 # this function calculates distance between all cells of raster
@@ -141,9 +152,9 @@ enveloppe <- function(X,p)
 
 transitionMatrixBackward <- function(rasterStack=environmentalData,prior){
   listeSample=sampleP(prior)
-  K = ReactNorm(values(rasterStack),listeSample$K$p,listeSample$K$model)[,"Y"]
-  r = ReactNorm(values(rasterStack),listeSample$R$p,listeSample$R$model)[,"Y"] 
-  migration <- migrationMatrix(rasterStack,listeSample$dispersion$model, listeSample$dispersion$p)
+  K = ReactNorm(values(rasterStack),listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
+  r = ReactNorm(values(rasterStack),listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
+  migration <- migrationMatrix(rasterStack,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
