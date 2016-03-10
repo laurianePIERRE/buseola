@@ -166,12 +166,12 @@ sampleP <- function(prior) {
         Result[[parametreBio]] <- list() 
          Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution, 
                                 uniform=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
-                                fixed =prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],
+                                fixed =prior[[parametreBio]][[variableEnvironnemental]]$a$p,
                                 normal=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
                                 loguniform=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])))
     
        Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
-      print(Result)
+     
     }
   }
   
