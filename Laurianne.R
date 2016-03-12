@@ -54,7 +54,7 @@ ReactNorm <- function(X,p,shapes)
     variables = colnames(p)[which(shapes==shape)]
     Y[,variables]=switch(shape,
                          constant=p,
-                         proportional = proportional(subset(X,select=variables),p),
+                         proportional = proportional(subset(X,select=variables),p), # erreur subset
                          linear = linear(subset(X,select=variables),p),
                          enveloppe=enveloppe(subset(X,select=variables),p),
                          envelin=envelinear(subset(X,select=variables),p),
@@ -80,6 +80,17 @@ populationSize <- function(donneesEnvironmentObs, p, shapes)
   values(populationSize) <- ReactNorm(valules(donneesEnvironmentObs), p, shapes)[1,]
   populationSize
 }
+
+
+
+# (optional) distanceMatrix return distance between all cells of raster
+distanceMatrix <- function(rasterStack){
+  #get x and y coordinates for each cell of raster object put in parameters
+  coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
+  distance = as.matrix(dist(coords)) # distance matrix of coordinates
+  return(distance)
+}
+
 
 
 
@@ -141,9 +152,9 @@ enveloppe <- function(X,p)
 
 transitionMatrixBackward <- function(rasterStack=environmentalData,prior){
   listeSample=sampleP(prior)
-  K = ReactNorm(values(rasterStack),listeSample$K$p,listeSample$K$model)[,"Y"]
-  r = ReactNorm(values(rasterStack),listeSample$R$p,listeSample$R$model)[,"Y"] 
-  migration <- migrationMatrix(rasterStack,listeSample$dispersion$model, listeSample$dispersion$p)
+  K = ReactNorm(values(rasterStack),listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
+  r = ReactNorm(values(rasterStack),listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
+  migration <- migrationMatrix(rasterStack,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -161,19 +172,17 @@ transitionMatrixBackward <- function(rasterStack=environmentalData,prior){
 ### function to sample  
 sampleP <- function(prior) {
   Result=list()
-  for(parametreBio in names(prior) ) {
+  for(parametreBio in names(prior)) {
     for (variableEnvironnemental in names(prior[[parametreBio]])) {
-      print (variableEnvironnemental)
-      print (parametreBio)
         Result[[parametreBio]] <- list() 
-        Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution, 
-                                uniform=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
-                                fixed =prior[[parametreBio]][[variableEnvironnemental]]$a$p,
-                                normal=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
-                                loguniform=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))) 
+         Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution, 
+                                uniform=data.frame(busseola=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                fixed =data.frame(busseola=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                normal=data.frame(busseola=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                loguniform=data.frame(busseola=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
     
        Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
-      print(Result)
+     
     }
   }
   
