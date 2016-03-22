@@ -54,7 +54,7 @@ ReactNorm <- function(X,p,shapes)
     variables = colnames(p)[which(shapes==shape)]
     Y[,variables]=switch(shape,
                          constant=p,
-                         proportional = proportional(subset(X,select=variables),p),
+                         proportional = proportional(subset(X,select=variables),p), # erreur subset
                          linear = linear(subset(X,select=variables),p),
                          enveloppe=enveloppe(subset(X,select=variables),p),
                          envelin=envelinear(subset(X,select=variables),p),
@@ -176,10 +176,17 @@ sampleP <- function(prior) {
     for (variableEnvironnemental in names(prior[[parametreBio]])) {
         Result[[parametreBio]] <- list() 
          Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution, 
+<<<<<<< HEAD
+                                uniform=data.frame(busseola=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                fixed =data.frame(busseola=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                normal=data.frame(busseola=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                loguniform=data.frame(busseola=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
+=======
                                 uniform=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
                                 fixed =prior[[parametreBio]][[variableEnvironnemental]]$a$p,
                                 normal=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
                                 loguniform=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])))
+>>>>>>> 4412283b0169b7d02197b0ff485617b5638052ef
     
        Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
      
