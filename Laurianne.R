@@ -110,22 +110,22 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   migration = apply(distMat, c(1,2), 
                     function(x)(switch(shapeDisp,
                                        # 1: alphaDisp   2: betaDisp ; note: esperance = 1/alphaDisp
-                                       fat_tail1 = 1/(1+x^pDisp[2]/pDisp[1]), # Molainen et al 2004
+                                       fat_tail1 = 1/(1+x^pDisp[,2]/pDisp[,1]), # Molainen et al 2004
                                        # 1: sigmaDisp
-                                       gaussian = (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE)),
+                                       gaussian = (dnorm(x, mean = 0, sd = pDisp[,1], log = FALSE)),
                                        # 1: sigma Disp
-                                       exponential = (dexp(x, rate = 1/pDisp[1], log = FALSE)),
+                                       exponential = (dexp(x, rate = 1/pDisp[,1], log = FALSE)),
                                        # 1: sigmaDisp
-                                       contiguous = (x==0)*(1-pDisp[1])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp[1]/(2*Ndim)),
+                                       contiguous = (x==0)*(1-pDisp[,1])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp[,1]/(2*Ndim)),
                                        # 1: sigmaDisp
-                                       contiguous8 = (x==0)*(1-pDisp[1])+((x>0)-(x>2*res(rasterStack)[1]))*(pDisp[1]/(4*Ndim)),
+                                       contiguous8 = (x==0)*(1-pDisp[,1])+((x>0)-(x>2*res(rasterStack)[1]))*(pDisp[,1]/(4*Ndim)),
                                        #island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]/(nCell-1)),
-                                       island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]),
+                                       island = (x==0)*(1-pDisp[,1])+(x>0)*(pDisp[,1]),
                                        #1: sigmaDisp    2: gammaDisp
-                                       fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5)),
+                                       fat_tail2 = x^pDisp[,2]*exp(-2*x/(pDisp[,1]^0.5)),
                                        #1: sigmaDisp, 2: 
                                        contiguous_long_dist_mixt = pDisp["plongdist"]/ncellA(rasterStack)+(x==0)*(1-pDisp["pcontiguous"]-pDisp["plongdist"])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp["pcontiguous"]/2),
-                                       gaussian_long_dist_mixt = pDisp[2]/ncellA(rasterStack) + (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE))
+                                       gaussian_long_dist_mixt = pDisp[,2]/ncellA(rasterStack) + (dnorm(x, mean = 0, sd = pDisp[,1], log = FALSE))
                     )))
   return(migration)
 }
@@ -152,8 +152,9 @@ enveloppe <- function(X,p)
 
 transitionMatrixBackward <- function(rasterStack=environmentalData,prior){
   listeSample=sampleP(prior)
-  K = ReactNorm(values(rasterStack),listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
-  r = ReactNorm(values(rasterStack),listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
+  X=valuesA(rasterStack)
+  K = ReactNorm(X,listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
+  r = ReactNorm(X,listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
   migration <- migrationMatrix(rasterStack,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
@@ -175,20 +176,22 @@ sampleP <- function(prior) {
   for(parametreBio in names(prior)) {
     for (variableEnvironnemental in names(prior[[parametreBio]])) {
         Result[[parametreBio]] <- list() 
-         Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution, 
-<<<<<<< HEAD
-                                uniform=data.frame(busseola=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
-                                fixed =data.frame(busseola=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
-                                normal=data.frame(busseola=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
-                                loguniform=data.frame(busseola=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
-=======
-                                uniform=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
-                                fixed =prior[[parametreBio]][[variableEnvironnemental]]$a$p,
-                                normal=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]),
-                                loguniform=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])))
->>>>>>> 4412283b0169b7d02197b0ff485617b5638052ef
-    
-       Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
+
+
+         Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution,
+                                uniform=data.frame(variableEnvironnemental=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                fixed =data.frame(variableEnvironnemental=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                normal=data.frame(variableEnvironnemental=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                loguniform=data.frame(variableEnvironnemental=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))),
+                                uniform=data.frame(variableEnvironnemental= runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                fixed =data.frame(variableEnvironnemental= prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                normal=data.frame(variableEnvironnemental =rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                loguniform=data.frame(variableEnvironnemental= log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
+         
+     Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
+     colnames(Result[[parametreBio]][[variableEnvironnemental]]$p)=variableEnvironnemental
+     rownames(Result[[parametreBio]][[variableEnvironnemental]]$p)=c("a")
+     names(Result[[parametreBio]][[variableEnvironnemental]]$model)=variableEnvironnemental
      
     }
   }
@@ -206,7 +209,8 @@ sampleP <- function(prior) {
 # Mcrae 2006
 # Hey 2001
 
-absorbingTransition <- function(transition,N)
+colnames(object)=names(object)
+AbsorbingTransition <- function(transition,N)
 {
   N[N<1]=1
   Ndeme <- dim(transition)[1]
