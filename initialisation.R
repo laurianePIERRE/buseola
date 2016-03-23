@@ -4,21 +4,21 @@
 # prior distributions
 prior=list()
 prior$K$busseola$a$distribution = "uniform"
-prior$K$busseola$model = data.frame(busseola="proportional")
+prior$K$busseola$model =c("proportional")
 prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
 prior$R$busseola$a$distribution = "fixed"
-prior$R$busseola$model =data.frame(busseola="constant")
+prior$R$busseola$model =c("constant")
 prior$R$busseola$a$p = 20
 prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
 prior$mutation_rate$busseola$a$distribution = "loguniform"
 prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
 prior$dispersion$busseola$model=data.frame(busseola="contiguous")
-prior$R$busseola$model = c(K="constant")
+prior$R$busseola$model = c("constant")
 prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model = "stepwise"
+prior$mutation_rate$busseola$model =c("stepwise")
 prior$mutation_rate$busseola$a$distribution = "loguniform"
 prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
-prior$dispersion$busseola$model="contiguous"
+prior$dispersion$busseola$model=c("contiguous")
 prior$dispersion$busseola$a$distribution="uniform"
 prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
 

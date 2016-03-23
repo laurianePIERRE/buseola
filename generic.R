@@ -7,3 +7,29 @@ setGeneric(
   def = function(object) { return(standardGeneric("valuesA"))})
 
 
+setGeneric(
+  name = "xyFromCellA",
+  def = function(object,cellNum) { return(standardGeneric("xyFromCellA"))})
+
+setGeneric(
+  name="distA",
+  def=function(object)
+               { return(standardGeneric("distA"))
+    }
+)
+
+setGeneric( 
+  name="distanceMatrixA",
+  def = function(object) { return(standardGeneric("distanceMatrixA"))}
+  )
+
+setGeneric(
+  name="migrationMatrixA",
+  def= function(object,shape,p) { return(standardGeneric("migrationMatrixA"))}
+)
+
+setGeneric(
+  name="transitionMatrixM",
+  def= function(object,prior)  { return(standarGeneric("transitionMatrixM"))}
+)
+

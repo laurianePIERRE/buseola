@@ -41,6 +41,28 @@ setMethod(
 )
 
 
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterLayer",
+  definition = function(object){
+    xyFromCell(object,cellNumA(object))
+  }
+)
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterStack",
+  definition = function(object){
+    xyFromCell(object,cellNumA(object))
+  }
+)
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterBrick",
+  definition = function(object){
+    xyFromCell(object,cellNumA(object))
+  }
+)
+
     
     
 setMethod(
@@ -52,4 +74,22 @@ setMethod(
         x
       }
 )
-        
+
+# copier la fonction distanceMatrix  dans la method en  l'adaptant --> idem pour transitionMatrix        
+
+
+setMethod(
+  f="distanceMatrixA",
+  signature="RasterLayer",
+  definition = function(object) {
+      coords = xyFromCellA(objet, 1:length(values(object[[1]])), spatial=FALSE)
+      distance = as.matrix(dist(coords)) # distance matrix of coordinates
+      distance
+  }
+)
+
+setMethod(
+  f="migrationMatrixA",
+  signature="RasterLayer",
+  definition = function(object,shape,p)
+)
