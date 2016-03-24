@@ -1,4 +1,3 @@
-
 #Initialisation
 
 
@@ -65,5 +64,9 @@ plot(genetSP,add=TRUE)
 min(extract(environmentalData,genetData[,c("x","y")]))
 genetData[which(extract(environmentalData,genetData[,c("x","y")])<0.01),]
 genetData=cleanerData(genetData)
-transitionMatrixA(environmentalData,prior)
-sampleP(prior) 
+matriceMigration=migrationMatrixA(environmentalData,listePrior$dispersion$busseola$model,listePrior$dispersion$busseola$p)
+matriceTrans=transitionMatrixA(environmentalData,prior)
+listePrior=sampleP(prior) 
+plot(raster(matriceMigration))
+plot(raster(matriceTrans))
+AbsorbingTransition(matriceTrans[1:50,1:50],valuesA(environmentalData))

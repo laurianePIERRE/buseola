@@ -198,6 +198,33 @@ sampleP <- function(prior) {
   
   return(Result)
 }
+
+
+# Aggregate_and_adjust_raster_to_data change resolution and extent of environmental stacked layers
+# according to data geographic range and extension zone outside geographic range of data
+# ARGUMENTS:
+# Envir_raster_stack = raster file 
+# xy = genetics data optionnal
+# extend_band_size =
+
+Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,xy=NULL,extend_band_size=NA,aggregate_index){
+  resDivAbs<-dim(Envir_raster_stack)[1]%aggregate_index
+  resDivAbs<-dim(Envir_raster_stack)[2]%aggregate_index
+  # dimention new windows [dim(Envir-raster-stack)[1]/aggregate_index][dim(Envir-raster-stack)[1]/aggregate_index]
+  # note = dans ?extend on met les coordonnee
+    if (aggregate_index > 1) {
+      Envir_raster_stack <- aggregate(crop(Envir_raster_stack,extent(xmin=0,xmax=dim(Envir_raster_stack)[1]/aggregate_index,ymin=0,ymax=dim(Envir_raster_stack)[1]/aggregate_index)
+                                           , fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
+      } else {
+      Envir_raster_stack <- aggregate(crop(Envir_raster_stack+extend_band_size), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
+    }
+    
+
+  Envir_raster_stack
+}
+
+
+
 #
 # Absorbing transition matrix
 # Estimates probability of transition among transient and absorbant states

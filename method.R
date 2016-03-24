@@ -108,7 +108,7 @@ setMethod(
   f="distanceMatrixA",
   signature="RasterLayer",
   definition = function(object) {
-      coords = xyFromCellA(objet, 1:length(values(object[[1]])), spatial=FALSE)
+      coords = xyFromCellA(object)
       distance = as.matrix(dist(coords)) 
       distance
   }
@@ -119,7 +119,7 @@ setMethod(
   signature="RasterLayer",
   definition = function(object,shapeDisp,pDisp){
       distMat<-distanceMatrixA(object)
-      Ndim = 1+all(ncellA(object)!=dim(o)[1:2])
+      Ndim = 1+all(ncellA(object)!=dim(object)[1:2])
       migration = apply(distMat, c(1,2), 
                         function(x)(switch(shapeDisp,
                                            # 1: alphaDisp   2: betaDisp ; note: esperance = 1/alphaDisp
