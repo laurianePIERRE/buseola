@@ -208,17 +208,14 @@ sampleP <- function(prior) {
 # extend_band_size =
 
 Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,xy=NULL,extend_band_size=NA,aggregate_index){
-  resDivAbs<-dim(Envir_raster_stack)[1]%aggregate_index
-  resDivAbs<-dim(Envir_raster_stack)[2]%aggregate_index
+  resDivAbs<-dim(Envir_raster_stack)[1]%%aggregate_index
+  resDivOrd<-dim(Envir_raster_stack)[2]%%aggregate_index
   # dimention new windows [dim(Envir-raster-stack)[1]/aggregate_index][dim(Envir-raster-stack)[1]/aggregate_index]
   # note = dans ?extend on met les coordonnee
     if (aggregate_index > 1) {
-      Envir_raster_stack <- aggregate(crop(Envir_raster_stack,extent(xmin=0,xmax=dim(Envir_raster_stack)[1]/aggregate_index,ymin=0,ymax=dim(Envir_raster_stack)[1]/aggregate_index)
-                                           , fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
-      } else {
-      Envir_raster_stack <- aggregate(crop(Envir_raster_stack+extend_band_size), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
+      Envir_raster_stack <-aggregate(crop(Envir_raster_stack,extent(as.vector(extent(xy)+extend_band_size *c(-1*res(Envir_raster_stack)[1],1*res(Envir_raster_stack)[1],
+                                                                                                                     -1*res(Envir_raster_stack)[2],1*res(Envir_raster_stack)[2]))))), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
     }
-    
 
   Envir_raster_stack
 }
@@ -423,3 +420,4 @@ coalescence_prob_time_distribution_matrix <- function(transition,max_time_interv
   #expected_coalescence_times<-unlist(coalescence_prob,dim=c(dim(matrix),length(coalescence_prob))
   list(coalescent_prob=coalescence_prob,exp_times=expected_coalescence_times)
 }
+
