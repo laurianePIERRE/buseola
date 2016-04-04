@@ -214,7 +214,7 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,xy=NULL,exten
   # note = dans ?extend on met les coordonnee
     if (aggregate_index > 1) {
       Envir_raster_stack <-aggregate(crop(Envir_raster_stack,extent(as.vector(extent(xy)+extend_band_size *c(-1*res(Envir_raster_stack)[1],1*res(Envir_raster_stack)[1],
-                                                                                                                     -1*res(Envir_raster_stack)[2],1*res(Envir_raster_stack)[2]))))), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
+                                                                                                                     -1*res(Envir_raster_stack)[2],1*res(Envir_raster_stack)[2])))), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
     }
 
   Envir_raster_stack
