@@ -214,7 +214,7 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,xy=NULL,exten
   # note = dans ?extend on met les coordonnee
     if (aggregate_index > 1) {
       Envir_raster_stack <-aggregate(crop(Envir_raster_stack,extent(as.vector(extent(xy)+extend_band_size *c(-1*res(Envir_raster_stack)[1],1*res(Envir_raster_stack)[1],
-                                                                                                                     -1*res(Envir_raster_stack)[2],1*res(Envir_raster_stack)[2]))))), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
+                                                                                                                     -1*res(Envir_raster_stack)[2],1*res(Envir_raster_stack)[2])))), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)
     }
 
   Envir_raster_stack
@@ -306,14 +306,15 @@ AbsorbingTransition <- function(transition,N)
     for (j in 1:(i-1)){ # only heterodemic sources
       ij=ij+1
       for(k in 1:Ndeme){ # only homodemic targets
-        QheteroHomo[ij,k] <- transition[i,k]*transition[j,k]*(1-1/(2*N[k]))
+        QheteroHomo[ij,k] <- transition[i,k]*transition[j,k]*(1-1/(2*N[k,]))
         # homodemic targets that have not coalesced
       }
     }
   }
-  QhomoHomo <- transition*transition*matrix(1-1/(2*N),nrow=Ndeme,ncol=Ndeme,byrow=TRUE)
+  QhomoHomo <- transition*transition*matrix(1-1/(2*N[,1]),nrow=Ndeme,ncol=Ndeme,byrow=TRUE)
   Q <- cbind(rbind(QheteroHetero,QhomoHetero),rbind(QheteroHomo,QhomoHomo))
-  list(Q=Q,Qline=Qline)
+  result=list(Q=Q,Qline=Qline)
+  result
 }
 
 #

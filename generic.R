@@ -35,6 +35,10 @@ setGeneric(
 
 setGeneric(
   name="transitionMatrixA",
-  def= function(object,prior)  { return(standarGeneric("transitionMatrixM"))}
+  def= function(object,prior)  { return(standardGeneric("transitionMatrixA"))}
 )
 
+setGeneric(
+  name="absorbingTransitionA",
+  def= function(object,N)  { return(standardGeneric("absorbingTransitionA"))}
+)

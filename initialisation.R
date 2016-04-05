@@ -70,13 +70,14 @@ listePrior=sampleP(prior)
 plot(raster(matriceMigration))
 plot(raster(matriceTrans))
 #diminution des pixels
-environmentalDataSimple=Aggregate_and_adjust_raster_to_data(environmentalData,xy=genetData[,c("x","y")],extend_band_size=1,aggregate_index=5)
+environmentalDataSimple=Aggregate_and_adjust_raster_to_data(environmentalData,xy=genetData[,c("x","y")],extend_band_size=1,aggregate_index=4)
 plot(environmentalDataSimple)
 matriceTrans=transitionMatrixA(environmentalDataSimple,prior)
-plot(matriceTrans)
-AbsorbingTransition(matriceTrans,valuesA(environmentalDataSimple))
-
+plot(raster(matriceTrans))
+matriceAbsorbante=absorbingTransitionA(matriceTrans,valuesA(environmentalDataSimple))
+plot(raster(matriceAbsorbante[[1]]))
 
 # pour simplifier 
 
-(sta=matrix(raster(1,50),nrow=5,ncol=3))
+ma=raster(matrix(c(20,30,40,10,NA,NA,20,30,40),nrow=3,ncol=3))
+

@@ -148,24 +148,89 @@ setMethod(
 )
 
 setMethod(
-  f="transitionMatrixA",
-  signature="RasterLayer",
-  definition = function(object,prior){
-      listeSample=sampleP(prior)
-      X=valuesA(object)
-      K = ReactNorm(X,listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
-      r = ReactNorm(X,listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
-      migration <- migrationMatrixA(object,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
-      if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
-      if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
-      if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
-      if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
-      if ((length(r)>1)&(length(K)>1)) {transition = t(matrix(r,nrow=length(r),ncol=length(r))) * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
-      transition = transition / rowSums(transition)  # Standardisation
-      transition = transition * as.numeric(transition>1e-6) # removal of values below 1e-6
-      transition = transition / rowSums(transition)  # Standardisation again
-      transition
+  f="absorbingTransitionA",
+  signature="matrix",
+  definition = function(object,N){
+    N[N<1]=1
+    Ndeme <- dim(object)[1]
+    # States of pairs of genes
+    # N Homodemic not coalesced states
+    # Heterodemic states (ij)!=(kl)
+    Nhetero <- Ndeme*(Ndeme-1)/2
+    # Ndeme Coalesced demic state, can be merged to 1 if we don't mind the deme
+    #
+    # First: 
+    # Calculate the transient states (not coalesced) transition matrix
+    # for transition among Q among N*(N+1)/2 not coalesced states 
+    # It is composed of a submatrixes of transition between not coalesced heterodemic and
+    # homodemic states
+    #
+    #    /          \
+    #    |HeHe  HeHo|
+    # Q= |HoHe  HoHo|
+    #    \          /
+    # where He are heterodemic states, and Ho are homodemic states
+    # In submatrix HeHe:
+    # lines ij are ordered for (i in 2:Ndeme) for (j in 1:(i-1))
+    # columns kl are ordered for (k in 2:Ndeme) for (l in 1:(k-1))
+    # In submatrix HoHe the lines are from 1 to Ndeme
+    Qline <- matrix(NA,Ndeme,Ndeme) # this matrix of the same dimension as the transition matrix
+    # contains the line number or column number 
+    # in transient Q matrix for each pair of deme {i,j} 
+    # presented as in the transition matrix
+    # 
+    QheteroHetero <- matrix(NA,Nhetero,Nhetero)
+    ij=0;kl=0
+    Check=TRUE
+    for (i in 2:Ndeme){
+      for(j in 1:(i-1)) {
+        ij=ij+1
+        Qline[i,j] <- Qline[j,i] <- ij # this matrix aims to find where the pair of demes {i,j}
+        # is in Q matrix lines or columns
+        #      i_j_Q_lines[ij,]<-c(i,j)
+        kl=0
+        for (k in 2:Ndeme){
+          for (l in 1:(k-1)){
+            kl=kl+1
+            QheteroHetero[ij,kl] <- object[i,k]*object[j,l]
+            #          Check <- Check*(P_i_k_j_l[P_ij_kl[ij,kl,"i"],P_ij_kl[ij,kl,"j"],P_ij_kl[ij,kl,"k"],P_ij_kl[ij,kl,"l"]]==Q[ij,kl])
+          }
+        }
+      }
     }
-
+    
+    # then transient matrix 
+    QhomoHetero <- matrix(NA,Ndeme,Nhetero)
+    kl=0
+    Check=TRUE
+    for (i in 1:Ndeme){ # only homodemic sources are considered (i=j)
+      Qline[i,i] <- Nhetero+i # the homodemic states are after the  heterodemic states
+      # in the lines of Q matrix
+      for (k in 2:Ndeme){
+        for (l in 1:(k-1)){ # only heterodemic targets
+          kl=kl+1
+          QhomoHetero[i,kl] <- object[i,k]*object[i,l]    # i=j (homodemic sources)
+          #          Check <- Check*(P_i_k_j_l[P_ij_kl[ij,kl,"i"],P_ij_kl[ij,kl,"j"],P_ij_kl[ij,kl,"k"],P_ij_kl[ij,kl,"l"]]==Q[ij,kl])
+        }
+      }
+      kl=0
+    }
+    QheteroHomo <- matrix(NA,Nhetero,Ndeme)
+    ij=0
+    for (i in 2:Ndeme){
+      for (j in 1:(i-1)){ # only heterodemic sources
+        ij=ij+1
+        for(k in 1:Ndeme){ # only homodemic targets
+          QheteroHomo[ij,k] <- object[i,k]*object[j,k]*(1-1/(2*N[k,]))
+          # homodemic targets that have not coalesced
+        }
+      }
+    }
+    QhomoHomo <- object*object*matrix(1-1/(2*N[,1]),nrow=Ndeme,ncol=Ndeme,byrow=TRUE)
+    Q <- cbind(rbind(QheteroHetero,QhomoHetero),rbind(QheteroHomo,QhomoHomo))
+    result=list(Q=Q,Qline=Qline)
+    result
+  } 
+  
   )
 
