@@ -114,6 +114,28 @@ setMethod(
   }
 )
 
+
+setMethod(
+  f="transitionMatrixA",
+  signature="RasterLayer",
+  definition = function(object,prior){
+  listeSample=sampleP(prior)
+  X=valuesA(object)
+  K = ReactNorm(X,listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
+  r = ReactNorm(X,listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
+  migration <- migrationMatrixA(object,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
+  if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
+  if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
+  if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
+  if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
+  if ((length(r)>1)&(length(K)>1)) {transition = t(matrix(r,nrow=length(r),ncol=length(r))) * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
+  transition = transition / rowSums(transition)  # Standardisation
+  transition = transition * as.numeric(transition>1e-6) # removal of values below 1e-6
+  transition = transition / rowSums(transition)  # Standardisation again
+  transition
+} 
+  )
+
 setMethod(
   f="migrationMatrixA",
   signature="RasterLayer",
