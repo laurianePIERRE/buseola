@@ -40,5 +40,11 @@ setGeneric(
 
 setGeneric(
   name="absorbingTransitionA",
-  def= function(object,N)  { return(standardGeneric("absorbingTransitionA"))}
+  def= function(object,...)  { return(standardGeneric("absorbingTransitionA"))}
 )
+
+setGeneric(
+  name="absorbingTransitionA",
+  def= function(object,...)  { return(standardGeneric("absorbingTransitionA"))}
+)
+
