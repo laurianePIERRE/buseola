@@ -42,6 +42,16 @@ setMethod(
 
 
 setMethod(
+  f = "valuesA",
+  signature = "Transition_Matrix",  
+  definition = function(object){
+    x=na.omit(values(object@populationsize))
+    colnames(x)=names(object)
+    x
+  }
+)
+
+setMethod(
   f = "xyFromCellA",
   signature = "RasterLayer",
   definition = function(object){
@@ -261,7 +271,7 @@ setMethod(
   f="absorbingTransitionA",
   signature="Transition_Matrix",
   definition = function(object){
-    N=valuesA(object@populationsize)
+    N=valuesA(object)
     N[N<1]=1
     Ndeme <- dim(object)[1]
     # States of pairs of genes

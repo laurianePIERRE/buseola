@@ -44,11 +44,11 @@ wd="~/Documents/M1bi 2015 2016/stage/busseola/"
 wd="~/Documents/Lauriane/busseola/"
 
 setwd(wd)
-
-source("Laurianne.R")
-source("generic.R");source("method.R")
 library(raster)
 library(rgdal) # necessary to use function raster()
+source("Laurianne.R")
+source("class.R")
+source("generic.R");source("method.R")
 environmentalData <- raster("busseola.tif")
 genetData <- read.table("WBf16genelandcoord.txt")
 genetData <- cbind(genetData,read.table("WBf16genelandgeno.txt"))
@@ -79,7 +79,7 @@ matriceAbsorbante=absorbingTransitionA(matriceTrans,valuesA(environmentalDataSim
 plot(raster(matriceAbsorbante[[1]]))
 
 # avec l utilisation de la class
-source("class.R")
+
 Matrice_de_transition=new("Transition_Matrix",matriceTrans,populationsize=environmentalDataSimple)
 absorbante=absorbingTransitionA(Matrice_de_transition)
 # pour simplifier 
@@ -115,3 +115,9 @@ plot(raster(matriceTrans),main="matrice de transition busseola")
 plot(raster(matriceAbsorbanteMa[[1]]),main="matrice absorbante simple")
 plot(raster(matriceAbsorbante[[1]]),main="matrice absorbante busseola")
 dev.off()
+
+
+#genealogie 
+
+genealogy=load("genealogy.rda")
+genealogy[[2]]
