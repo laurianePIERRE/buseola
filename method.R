@@ -355,4 +355,25 @@ setMethod(
   
 )
 
+setMethod(
+  f="plotgenealogy",
+  signature="Genealogy",
+  definition = function(object)    {
+    plot(coalescent_2_phylog(object))
+    }
+)
 
+setMethod(
+  f="plotLandG",
+  signature="LandGenealogy",
+  definition=function(object,rasK=NULL) {
+    par(mfrow=c(1,2))
+    plot(object)
+    tipcells <- genotypes[,2][as.numeric(coalescent_2_phylog(coalescent)$tip.label)]
+    tipcols = rainbow(ncell(rasK))[tipcells]
+    plotgenealogy(object@genealogy,tip.color=tipcols)
+    legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(legend_right_move,0))
+    
+    
+  }
+)

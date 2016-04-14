@@ -233,7 +233,7 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,xy=NULL,exten
 # Mcrae 2006
 # Hey 2001
 
-colnames(object)=names(object)
+
 AbsorbingTransition <- function(transition,N)
 {
   N[N<1]=1
@@ -349,6 +349,32 @@ coalescenceTimeProbDistrib <- function(Qlist){
 #        -first : array of coalescence times for deme pairs
 #        -second : matrix of expected coalescence times (mean of the distribution)
 #
+
+
+# coalescent_2_newick
+# fuinction that converts coalescent
+# 
+
+coalescent_2_newick <- function(coalescent)
+{
+  #  tree=paste("(",coalescent[[length(coalescent)]]$new_node,")",sep="")
+  tree=paste(" ",coalescent[[length(coalescent)]]$new_node," ",sep="")
+  for (i in length(coalescent):1)
+  {
+    Time = coalescent[[i]]$time
+    coalesc <- as.character(coalescent[[i]]$coalescing)
+    tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]$new_node)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
+  }
+  tree <- gsub(" ","",paste(tree,";",sep=""))
+  tree
+}
+
+
+coalescent_2_phylog <- function(coalescent)
+{
+  read.tree(text=coalescent_2_newick(coalescent))
+}
+
 
 coalescence_prob_time_distribution_matrix <- function(transition,max_time_interval=4,rasK,threshold=1E-6)
 {

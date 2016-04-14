@@ -48,3 +48,12 @@ setGeneric(
   def= function(object,...)  { return(standardGeneric("absorbingTransitionA"))}
 )
 
+setGeneric(
+  name="plotgenealogy",
+  def=function(object) {return(standardGeneric("plotgenealogy"))}
+)
+
+setGeneric(
+  name = "plotLandG",
+  def=function(object,rasK) {return(standardGeneric("plotLandG"))}
+)

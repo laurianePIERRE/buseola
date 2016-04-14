@@ -119,5 +119,14 @@ dev.off()
 
 #genealogie 
 
-genealogy=load("genealogy.rda")
+load("genealogy.rda")
 genealogy[[2]]
+library(ape)
+library(stringr)
+plot(coalescent_2_phylog(genealogy))
+coalescent=new("Genealogy",genealogy,genotypes[,2])
+plotgenealogy(coalescent)
+geneasimple=new("LandGenealogy",ma,genealogy=coalescent)
+plotLandG(geneasimple,rasK = NULL)
+
+# donnes genetique pour le mini jeu de donnees genotypes
