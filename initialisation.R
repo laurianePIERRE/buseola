@@ -118,8 +118,13 @@ dev.off()
 
 
 #genealogie 
-
 load("genealogy.rda")
+
+# donnes genetique pour le mini jeu de donnees genotypes
+load("genotypes.rda")
+gen <- new("genetic",data.frame(Locus1=genotypes[,"Locus1"]),ploidy=as.integer(1), ploidyByrow=FALSE)
+spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=genotypes[,"Cell_numbers"])
+
 genealogy[[2]]
 library(ape)
 library(stringr)
@@ -129,4 +134,4 @@ plotgenealogy(coalescent)
 geneasimple=new("LandGenealogy",ma,genealogy=coalescent)
 plotLandG(geneasimple,rasK = NULL)
 
-# donnes genetique pour le mini jeu de donnees genotypes
+
