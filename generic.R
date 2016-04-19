@@ -50,7 +50,7 @@ setGeneric(
 
 setGeneric(
   name="plotgenealogy",
-  def=function(object) {return(standardGeneric("plotgenealogy"))}
+  def=function(object,tipcols) {return(standardGeneric("plotgenealogy"))}
 )
 
 setGeneric(

@@ -318,6 +318,24 @@ AbsorbingTransition <- function(transition,N)
 }
 
 #
+
+# to sample node in tree genealogy
+
+SampleGenealogy <- function(listGenea,nbEven,nodecoalescing) {
+  
+  par(mfrow=c(2,1))
+  plot(coalescent_2_phylog(listGenea))
+  listGenea[[nbEven]]$new_node[2]=nodecoalescing
+  plot(coalescent_2_phylog(listGenea))
+}
+
+
+
+
+
+
+
+
 # Probability distribuiton of coalescence times
 #
 

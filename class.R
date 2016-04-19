@@ -23,14 +23,14 @@ LandGenealogy <- setClass("LandGenealogy",
 
 LandGenetGenealogy <- setClass( "LandGenetGenalogy",
                                 contains = "LandGenealogy",
-                                slot= c(Genotype="matrix"))
+                                slot= c(Genotype="spatialGenetic"))
 genetic <- setClass("genetic",
                     slots = c(ploidy="integer",ploidyByrow="logical"),
                     contains="data.frame",
                     prototype = prototype(data.frame(locus1.1=c(200,202),locus1.2=c(204,200)),ploidy=as.integer(2), ploidyByrow=FALSE),
                     validity = function(object){
                       if (all(grepl("ocus",names(object)))) TRUE else stop("col names of genetic data.frame do not contain 'ocus'")
-                      if ((object@ploidy==2)&(object@ploidyByrow==FALSE)) {
+                      if ((object@ploidy==2)&(object@ploidyByrow==FALSE)) {tip.color=tipcols
                         if (length(grep("\\.1",names(object)))==0|length(grep("\\.2",names(object)))==0) {
                           if ((grep("\\.1",names(object))%%2!=1)|(grep("\\.2",names(object))%%2!=0)){
                             stop("Columns of diploid by row FALSE data frame have to be named as follows: 'c('.1','.2','.1','.2')'")
