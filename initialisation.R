@@ -43,6 +43,8 @@ wd="~/Documents/M1bi 2015 2016/stage/busseola/"
 
 wd="~/Documents/Lauriane/busseola/"
 
+#  wd="/home/dupas/busseola"
+
 setwd(wd)
 library(raster)
 library(rgdal) # necessary to use function raster()

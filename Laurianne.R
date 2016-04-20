@@ -28,6 +28,24 @@ TwoCols2OneCol <- function(tip_genotype)
 }
 #
 
+change_node <- function(genealogy){
+  coalescent_event <- sample(length(genealogy),1)
+  new_node <- genealogy[[coalescent_event]]$new_node
+  # get the coalescing modified
+  coalescing_modfied <- sample(genealogy[[coalescent_event]]$coalescing,1)
+  # where is new node branched ? 
+  coalescent_event_where_new_node_of_the_brother_will_be_branched <-  which(lapply(genealogy,"[[","new_node")==new_node)
+  # replace new node in this coalescent event with the coalescing node that is not modified
+  
+  # modify the information of the coalescent event that has been removed
+  
+  # which coalescing the node will be associated with
+  all_coalescing <- unlist(lapply(genealogy,"[[","coalescing"))
+  potential_new_associated_node <- all_coalescing[which(all_coalescing!=coalescing_modified)]
+  new_associated_node 
+  # modify the brother of the coalescing modified
+  genealogy[[coalescent_event]] <- 
+}
 
 
 proportional <- function(X,p,Log=FALSE)
