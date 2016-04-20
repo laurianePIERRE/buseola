@@ -321,14 +321,35 @@ AbsorbingTransition <- function(transition,N)
 
 # to sample node in tree genealogy
 
-SampleGenealogy <- function(listGenea,nbEven,nodecoalescing) {
-  
-  par(mfrow=c(2,1))
-  plot(coalescent_2_phylog(listGenea))
-  listGenea[[nbEven]]$new_node[2]=nodecoalescing
-  plot(coalescent_2_phylog(listGenea))
-}
 
+change_node <- function(genealogy){
+  coalescent_event <- sample(length(genealogy),1)
+  new_node <- genealogy[[coalescent_event]]$new_node
+  # get the coalescing modified
+  coalescing_modified <- sample(genealogy[[coalescent_event]]$coalescing,1)
+  # where is new node branched ?
+  coalescent_event_where_new_node_of_the_brother_will_be_branched <-  grep(new_node,lapply(genealogy,"[[","coalescing"))
+  # replace new node in this coalescent event with the coalescing node that is not modified
+  # get the coalescing node that is not modified
+  for( i in 1:length(genealogy[[coalescent_event]]$coalescing)) {
+    if (genealogy[[coalescent_event]]$coalescing[i]!=coalescing_modified){
+      coalescing_brother_no_modifie=genealogy[[coalescent_event]]$coalescing[i]
+    }
+  }
+  genealogy[[coalescent_event_where_new_node_of_the_brother_will_be_branched]]$new_node=coalescing_brother_no_modifie
+  # modify the information of the coalescent event that has been removed
+  
+  # which coalescing the node will be associated with
+  all_coalescing <- unlist(lapply(genealogy,"[[","coalescing"))
+  potential_new_associated_node <- all_coalescing[which(all_coalescing!=coalescing_modified)]
+  new_associated_node<-sample(potential_new_associated_node,1)
+  # where the node will be
+  # modify the brother of the coalescing modified
+  genealogy[[coalescent_event]] <-
+    # take the same event put 
+  genealogy[[coalescent_event]]$new_node= 9
+  genealogy[[coalescent_event]]$coalescing=c(new_associated_node,coalescing_modified)
+}
 
 
 
