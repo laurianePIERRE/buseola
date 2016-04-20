@@ -135,12 +135,5 @@ geneasimple=new("LandGenealogy",ma,genealogy=coalescent)
 plotLandG(geneasimple,rasK = NULL)
 geneaandgenet=new("LandGenetGenalogy",geneasimple,Genotype=spgen)
 
-# changement de noeud
-
-genealogy[[2]]$new_node=5
-
-# changement de branche
-SampleGenealogy(genealogy,3,6)
-
 
 

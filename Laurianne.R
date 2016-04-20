@@ -347,7 +347,7 @@ change_node <- function(genealogy){
   # modify the brother of the coalescing modified
   genealogy[[coalescent_event]] <-
     # take the same event put 
-  genealogy[[coalescent_event]]$new_node= 9
+  genealogy[[coalescent_event]]$new_node= 
   genealogy[[coalescent_event]]$coalescing=c(new_associated_node,coalescing_modified)
 }
 
