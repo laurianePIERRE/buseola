@@ -10,6 +10,10 @@ Transition_Matrix <- setClass("Transition_Matrix",
 # nrow replace dim() because object is a matrix 
 
 
+colored_genealogy <- setClass("colored_genealogy",
+                              contains="Genealogy",
+                              slots=c(color="integer"))
+
 Genealogy <- setClass("Genealogy",
                       contains ="list",
                       slots = c(NumCel="vector")

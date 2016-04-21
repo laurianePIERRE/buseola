@@ -136,4 +136,32 @@ plotLandG(geneasimple,rasK = NULL)
 geneaandgenet=new("LandGenetGenalogy",geneasimple,Genotype=spgen)
 
 
+########## modify gealogy to colorate this
 
+genealogymod=change_genealogy(genealogy)
+
+
+# try to use phtools for colorate
+# our data = ma (raster simplify dim (3,3,1))
+
+## set seed for reproducibility
+set.seed(100)
+## load phytools
+library(phytools)
+## simulate a tree & some data
+tree <- pbtree(n = 26, scale = 1)
+tree$tip.label <- LETTERS[26:1]
+x <- fastBM(tree)
+
+Q <- matrix(c(-2, 1, 1, 1, -2, 1, 1, 1, -2), 3, 3)
+colnames(Q) <- rownames(Q) <- letters[1:3]
+x <- sim.history(tree, Q, anc = "a")$states
+print(x)
+# estimate ancestral states under a ER model
+fitER <- rerootingMethod(tree, x, model = "ER")
+print(fitER)
+plotTree(tree, setEnv = TRUE, offset = 0.5)
+nodelabels(node = as.numeric(rownames(fitER$marginal.anc)), pie = fitER$marginal.anc, 
+           piecol = c("blue", "red", "yellow"), cex = 0.6)
+tiplabels(pie = to.matrix(x, sort(unique(x))), piecol = c("blue", "red", "yellow"), 
+          cex = 0.3)

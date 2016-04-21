@@ -317,7 +317,14 @@ AbsorbingTransition <- function(transition,N)
   result
 }
 
-#
+#to modify structure genealogy
+
+change_genealogy <- function(genealogy) {
+  for (event in 1:length(genealogy)) {
+    genealogy[[event]]$colescing<-list(c(genealogy[[event]]$coalescing,c("vector of position","x","y"),c("changement of position","x")))
+  }
+genealogy
+  }
 
 # to sample node in tree genealogy
 
