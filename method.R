@@ -378,3 +378,9 @@ setMethod(
     
   }
 )
+
+
+setMethod(
+  f="plotFork",
+  draw.circle(x,y,radius,nv=100,border=NULL,col=NA,lty=1,lwd=1)
+  )

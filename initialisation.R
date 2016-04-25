@@ -42,13 +42,15 @@ prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
 wd="~/Documents/M1bi 2015 2016/stage/busseola/"
 
 wd="~/Documents/Lauriane/busseola/"
-
+# wd= "~/busseola/"
 setwd(wd)
 library(raster)
 library(rgdal) # necessary to use function raster()
 source("Laurianne.R")
 source("class.R")
 source("generic.R");source("method.R")
+load("prior.rda")
+
 environmentalData <- raster("busseola.tif")
 genetData <- read.table("WBf16genelandcoord.txt")
 genetData <- cbind(genetData,read.table("WBf16genelandgeno.txt"))
@@ -87,7 +89,6 @@ absorbante=absorbingTransitionA(Matrice_de_transition)
 ma=raster(matrix(c(20,30,40,10,NA,NA,20,30,40),nrow=3,ncol=3))
 extent(ma)=c(0,3,0,3)
 names(ma)="busseola"
-values(ma)=c(20,30,40,10,NA,NA,20,30,40)
 plot(ma)
 dim(ma)
 matriceAbsMa=migrationMatrixA(ma,listePrior$dispersion$busseola$model,listePrior$dispersion$busseola$p)
@@ -122,8 +123,12 @@ load("genealogy.rda")
 
 # donnes genetique pour le mini jeu de donnees genotypes
 load("genotypes.rda")
+
+# population data
+load("populations.rda")
 gen <- new("genetic",data.frame(Locus1=genotypes[,"Locus1"]),ploidy=as.integer(1), ploidyByrow=FALSE)
 spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=genotypes[,"Cell_numbers"])
+popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
 
 genealogy[[2]]
 library(ape)
@@ -165,3 +170,12 @@ nodelabels(node = as.numeric(rownames(fitER$marginal.anc)), pie = fitER$marginal
            piecol = c("blue", "red", "yellow"), cex = 0.6)
 tiplabels(pie = to.matrix(x, sort(unique(x))), piecol = c("blue", "red", "yellow"), 
           cex = 0.3)
+
+
+# Mutation landscape
+#
+
+mutland <- raster(matrix(1:4,nrow=2))
+extent(mutland) <- c(0,2,0,2)
+plot( mutland,col=c("blue","red","yellow","green"))
+plot(SpatialPointsDataFrame(SpatialPoints(xyFromCell(mutland,1:4)),data.frame(Genotype=c("A","T","G","C"))),legend=c("A","T","G","C"),add=TRUE)
