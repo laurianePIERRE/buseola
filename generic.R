@@ -15,8 +15,8 @@ setGeneric(
   def= function(object) { return(standardGeneric("leaves"))})
 
 setGeneric(
-  name="leavesDemes",
-  def= function(object) { return(standardGeneric("leavesDemes"))})
+  name="statesOfLeaves",
+  def= function(object) { return(standardGeneric("statesOfLeaves"))})
 
 setGeneric(
   name="varnames",

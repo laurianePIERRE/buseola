@@ -182,11 +182,14 @@ setMethod(
 )
 
 setMethod(
-  f="leavesDemes",
+  f="statesOfLeaves",
   signature="listOfGenealogies",
   definition=function(object){
-    unlist(lapply(object,function(object) object@States$demes))[leaves(object)]}
+    unlist(lapply(object,function(object) object@States))[leaves(object)]}
 )
+
+
+
 
 setMethod(
   f="migrationMatrixA",

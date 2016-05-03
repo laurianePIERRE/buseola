@@ -498,6 +498,8 @@ coalescence_prob_time_distribution_matrix <- function(transition,max_time_interv
 #                            #
 ##############################
 
+
+
 simul_coalescent <- function(transitionList, Ne, statesdf)#transitionList,geneticData)
 {
   # transitionList =  list of transition matrix 
@@ -511,15 +513,15 @@ simul_coalescent <- function(transitionList, Ne, statesdf)#transitionList,geneti
     coalescent[[i]] <- new("Genealogy",age=0,nodeNo=i,descendantList=list(),States=statesdf[statesdf$nodeNo==i,])
     names(coalescent)[i]=i
   }
-  coalescent# = new("listOfGenealogies",coalescent)
+  coalescent2= new("listOfGenealogies",coalescent)
   
   # list containing all the times and genes conserved by coalescent events
   # when 2 genes or more coalesce, only the the genes tagged by has the smallest number remains
   nodes = leaves(coalescent)# names of the tip nodes that will coalesce
-  cell_number_of_nodes <- leavesDemes(coalescent) # where were the genes sampled in the landscape
+  status_of_nodes <- statesOfLeaves(coalescent) # where were the genes sampled in the landscape
   #names(cell_number_of_nodes) <- nodes
-  parent_cell_number_of_nodes <- cell_number_of_nodes # where the previous generation genes were in the landscape
-  nodes_remaining_by_cell = list() # a list of cells with all the genes remaining in each cell after coalescence
+  parent_status_of_nodes <- cell_number_of_nodes # where the previous generation genes were in the landscape
+  nodes_remaining_by_status = list() # a list of cells with all the genes remaining in each cell after coalescence
   time=0 # backward time
   single_coalescence_events=0 # number of single coalescence events. Coalescence involving multiple individuals counts for 1 event.
   single_and_multiple_coalescence_events=0 # number of single and multiple coalescence events. Coalescence involving multiple individuals counts for "the number of individuals - 1" events.
@@ -531,6 +533,9 @@ simul_coalescent <- function(transitionList, Ne, statesdf)#transitionList,geneti
   {
     # migration
     # we localize the parents in the landscape by sampling in the backward transition matrix
+    for dimension in 1:legnth(transitionList) {
+      
+    }
     for (node in 1:length(parent_cell_number_of_nodes))#gene=1;node=1# parent_cell_number_of_nodes
     {
       parent_cell_number_of_nodes[node] = sample(nrow(Ne),size=1,prob=c(transitionList$demes[cell_number_of_nodes[node],]))
@@ -539,6 +544,10 @@ simul_coalescent <- function(transitionList, Ne, statesdf)#transitionList,geneti
     # prob_forward[time] = sum(log(transitionList$forw[parent_cell_number_of_nodes,cell_number_of_nodes]))
     # coalescence
     time=time+1; if (time%%10==0) {print(time)}
+    nodes_that_changed_cell <- names(which(parent_cell_number_of_nodes!=cell_number_of_nodes))
+    coalescent[[nodes_that_changed_cell]]@States <- rbind(coalescent[[nodes_that_changed_cell]]@States,
+                                                          c(as.integer(nodes_that_changed_cell),
+                                                            ))
     # we now perform coalescence within each cell of the landscape for the parents
     for (cell in rownames(Ne))#cell=1;cell=2;cell=3;cell=4;cell=5;cell=26;cell=10
     {     
