@@ -6,6 +6,21 @@ setGeneric(
   name = "valuesA",
   def = function(object) { return(standardGeneric("valuesA"))})
 
+setGeneric(
+  name="nodes",
+  def= function(object) { return(standardGeneric("nodes"))})
+
+setGeneric(
+  name="leaves",
+  def= function(object) { return(standardGeneric("leaves"))})
+
+setGeneric(
+  name="leavesDemes",
+  def= function(object) { return(standardGeneric("leavesDemes"))})
+
+setGeneric(
+  name="varnames",
+  def=function(object){return(standardgeneric("varnames"))})
 
 setGeneric(
   name = "cellNumA",
@@ -35,7 +50,7 @@ setGeneric(
 
 setGeneric(
   name="transitionMatrixA",
-  def= function(object,prior)  { return(standardGeneric("transitionMatrixA"))}
+  def= function(object1,object2)  { return(standardGeneric("transitionMatrixA"))}
 )
 
 setGeneric(

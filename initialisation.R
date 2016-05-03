@@ -1,39 +1,39 @@
 #Initialisation
 
 
-# prior distributions
-prior=list()
-prior$K$busseola$a$distribution = "uniform"
-prior$K$busseola$model = data.frame(busseola="proportional")
-prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
-prior$R$busseola$a$distribution = "fixed"
-prior$R$busseola$model =data.frame(busseola="constant")
-prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
-prior$mutation_rate$busseola$a$distribution = "loguniform"
-prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
-prior$dispersion$busseola$model=data.frame(busseola="contiguous")
-prior$R$busseola$model = c(K="constant")
+# Prior distributions
+Prior=list()
+Prior$K$busseola$a$distribution = "uniform"
+Prior$K$busseola$model = data.frame(busseola="proportional")
+Prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
+Prior$R$busseola$a$distribution = "fixed"
+Prior$R$busseola$model =data.frame(busseola="constant")
+Prior$R$busseola$a$p = 20
+Prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
+Prior$mutation_rate$busseola$a$distribution = "loguniform"
+Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
+Prior$dispersion$busseola$model=data.frame(busseola="contiguous")
+Prior$R$busseola$model = c(K="constant")
 
-prior$K$busseola$model =c("proportional")
-prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
-prior$R$busseola$a$distribution = "fixed"
-prior$R$busseola$model =c("constant")
-prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
-prior$mutation_rate$busseola$a$distribution = "loguniform"
-prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
+Prior$K$busseola$model =c("proportional")
+Prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
+Prior$R$busseola$a$distribution = "fixed"
+Prior$R$busseola$model =c("constant")
+Prior$R$busseola$a$p = 20
+Prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
+Prior$mutation_rate$busseola$a$distribution = "loguniform"
+Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
 
-prior$dispersion$busseola$model="contiguous"
-prior$dispersion$busseola$model=data.frame(busseola="contiguous")
-prior$R$busseola$model = c("constant")
-prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model =c("stepwise")
-prior$mutation_rate$busseola$a$distribution = "loguniform"
-prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
-prior$dispersion$busseola$model=c("contiguous")
-prior$dispersion$busseola$a$distribution="uniform"
-prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
+Prior$dispersion$busseola$model="contiguous"
+Prior$dispersion$busseola$model=data.frame(busseola="contiguous")
+Prior$R$busseola$model = c("constant")
+Prior$R$busseola$a$p = 20
+Prior$mutation_rate$busseola$model =c("stepwise")
+Prior$mutation_rate$busseola$a$distribution = "loguniform"
+Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
+Prior$dispersion$busseola$model=c("contiguous")
+Prior$dispersion$busseola$a$distribution="uniform"
+Prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
 
 # fixed uniform normal loguniform lognormal
 
@@ -46,10 +46,10 @@ wd="~/Documents/Lauriane/busseola/"
 setwd(wd)
 library(raster)
 library(rgdal) # necessary to use function raster()
-source("Laurianne.R")
 source("class.R")
 source("generic.R");source("method.R")
-load("prior.rda")
+source("Laurianne.R")
+load("Prior.rda")
 
 environmentalData <- raster("busseola.tif")
 genetData <- read.table("WBf16genelandcoord.txt")
@@ -66,16 +66,16 @@ plot(genetSP,add=TRUE)
 min(extract(environmentalData,genetData[,c("x","y")]))
 genetData[which(extract(environmentalData,genetData[,c("x","y")])<0.01),]
 genetData=cleanerData(genetData)
-listePrior=sampleP(prior) 
+listePrior=sampleP(Prior) 
 matriceMigration=migrationMatrixA(environmentalData,listePrior$dispersion$busseola$model,listePrior$dispersion$busseola$p)
-matriceTrans=transitionMatrixA(environmentalData,prior)
-listePrior=sampleP(prior) 
+matriceTrans=transitionMatrixA(environmentalData,Prior)
+listePrior=sampleP(Prior) 
 plot(raster(matriceMigration))
 plot(raster(matriceTrans))
 #diminution des pixels
 environmentalDataSimple=Aggregate_and_adjust_raster_to_data(environmentalData,xy=genetData[,c("x","y")],extend_band_size=1,aggregate_index=4)
 plot(environmentalDataSimple)
-matriceTrans=transitionMatrixA(environmentalDataSimple,prior)
+matriceTrans=transitionMatrixA(environmentalDataSimple,Prior)
 plot(raster(matriceTrans))
 matriceAbsorbante=absorbingTransitionA(matriceTrans,valuesA(environmentalDataSimple))
 plot(raster(matriceAbsorbante[[1]]))
@@ -94,7 +94,7 @@ dim(ma)
 matriceAbsMa=migrationMatrixA(ma,listePrior$dispersion$busseola$model,listePrior$dispersion$busseola$p)
 
 plot(raster(matriceAbsMa))
-matriceTransMa=transitionMatrixA(ma,prior)
+matriceTransMa=transitionMatrixA(ma,Prior)
 plot(raster(matriceTransMa))
 matriceAbsorbanteMa=absorbingTransitionA(matriceTransMa,valuesA(ma))
 plot(raster(matriceAbsorbanteMa[[1]]))
@@ -179,3 +179,15 @@ mutland <- raster(matrix(1:4,nrow=2))
 extent(mutland) <- c(0,2,0,2)
 plot( mutland,col=c("blue","red","yellow","green"))
 plot(SpatialPointsDataFrame(SpatialPoints(xyFromCell(mutland,1:4)),data.frame(Genotype=c("A","T","G","C"))),legend=c("A","T","G","C"),add=TRUE)
+
+#
+# Simulate genealogy
+#
+
+transition=transitionMatrixA(object1 = populations,object2 = sampleP(Prior))
+allelicTransition <- matrix(c(.999,0.001,0.001,0.999),nrow=2)
+dimnames(allelicTransition) <- list(1:2,1:2)
+transitionList=list(allelicTransition,transition)
+names(transitionList) <- c("locus1","demes")
+statesdf <- data.frame(locus1=rep(1,5),demes=spgen@Cell_numbers)
+

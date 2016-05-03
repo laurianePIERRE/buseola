@@ -1,3 +1,9 @@
+prior <- setClass("prior",
+                  contains="list") # add validity (contains K, R and mutation_rate)
+
+parameters <- setClass("parameters",
+                       contains="list") # add validity (contains K, R and mutation_rate)
+
 
 Transition_Matrix <- setClass("Transition_Matrix",
                               slots = c(populationsize="RasterLayer"),
@@ -11,42 +17,17 @@ Transition_Matrix <- setClass("Transition_Matrix",
 
 
 Genealogy <- setClass("Genealogy",
+                      slots = c(age="numeric",nodeNo="integer",descendantList="list",
+                      States="data.frame")
+                      )
+
+listOfGenealogies <- setClass("listOfGenealogies",
                       contains ="list",
-                      slots = c(Cell_numbers="vector")
-                      
-)
+                      validity = function(object){
+                        if (all(lapply(object,"class")=="Genealogy")) TRUE else FALSE
+                      }
+                      )
 
-setClass("ForkList", contains="list"
-         ,validity= function(object) {
-           ok <- sapply(object, is, "Fork")
-           if (!all(ok)) "'ForkList' elements must all be 'Fork'"
-           else TRUE
-         }
-         )
-
-setClass("colouring",
-         slots=c(ages="numeric",colours="character"),
-         validity=function(object){
-           if (!all(object@colours%in%colors())) stop("colours names are wrong")
-           if (length(object@ages)!=length(object@colours)) stop("length of age and length of colours vectors differ")
-         }
-         )
-
-setClass("Fork",
-         representation=representation(
-           age="numeric", name="character", descendants="ForkList",colouringlist = "list"),
-         validity=function(object){
-           if (!all(lapply(object@colouringlist,"class")=="colouring")) stop("coloringlist is not a list of coloring")
-           if (!all(lapply(object@descendants,"class")=="Fork")) stop("descendantlist is not a list of Fork")
-           if (length(object@colouringlist)!=length(object@descendants)) stop("length of descendant list and length of coloringlist differ")
-         })
-
-tree  <- new("Fork",age=10,name="busseola",
-             descendants=new("ForkList", list(
-               new("Fork",age=0,name="1",descendants=new("ForkList"),colouringlist=list()),
-               new("Fork",age=0,name="2",descendants=new("ForkList"),colouringlist=list()))),
-             colouringlist=list(new("colouring",ages=c(1,10),colours=c("blue","red")),
-                                new("colouring",ages=c(5,10),colours=c("yellow","red"))))
 
 colored_genealogy <- setClass("colored_genealogy",
                               contains="Genealogy",
