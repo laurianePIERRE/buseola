@@ -124,16 +124,22 @@ setMethod(
   }
 )
 
+setMethod(
+  f="transitionMatrixA",
+  signature=c("RasterLayer","prior"),
+  definition = function(object1,object2){
+    object2 <- sampleP(object2)
+    transitionMatrixA(object1,object2)
+  })
 
 setMethod(
   f="transitionMatrixA",
-  signature="RasterLayer",
-  definition = function(object,prior){
-  listeSample=sampleP(prior)
-  X=valuesA(object)
-  K = ReactNorm(X,listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
-  r = ReactNorm(X,listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
-  migration <- migrationMatrixA(object,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
+  signature=c("RasterLayer","parameters"),
+  definition = function(object1,object2){
+  X=valuesA(object1)
+  K = ReactNorm(X,object2$K[[names(object1)]]$p,object2$K[[names(object1)]]$model)[,"Y"]
+  r = ReactNorm(X,object2$R[[names(object1)]]$p,object2$R[[names(object1)]]$model)[,"Y"] 
+  migration <- migrationMatrixA(object1,object2$dispersion[[names(object1)]]$model, object2$dispersion[[names(object1)]]$p)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -143,8 +149,44 @@ setMethod(
   transition = transition * as.numeric(transition>1e-6) # removal of values below 1e-6
   transition = transition / rowSums(transition)  # Standardisation again
   transition
-} 
+  } 
   )
+
+setMethod(
+  f="varnames",
+  signature="parameters",
+  definition=function(object){
+    names(object$K)
+  })
+
+setMethod(
+  f="varnames",
+  signature="prior",
+  definition=function(object){
+    names(object$K)
+  })
+
+setMethod(
+  f="nodes",
+  signature="listOfGenealogies",
+  definition=function(object){
+    unlist(lapply(object,function(sub) sub@nodeNo))
+  }
+)
+
+setMethod(
+  f="leaves",
+  signature="listOfGenealogies",
+  definition=function(object){
+    which(lapply((lapply(object,function(x) x@descendantList)),"length")==0)  }
+)
+
+setMethod(
+  f="leavesDemes",
+  signature="listOfGenealogies",
+  definition=function(object){
+    unlist(lapply(object,function(object) object@States$demes))[leaves(object)]}
+)
 
 setMethod(
   f="migrationMatrixA",
@@ -358,18 +400,19 @@ setMethod(
 setMethod(
   f="plotgenealogy",
   signature="Genealogy",
-  definition = function(object)    {
-    plot(coalescent_2_phylog(object))
+  definition = function(object,tipcols=NA)    {
+    if(is.na(tipcols)) { tipcols=1}
+    plot(coalescent_2_phylog(object),direction="downward",tip.color=tipcols)
     }
 )
 
 setMethod(
   f="plotLandG",
-  signature="LandGenealogy",
+  signature="LandGenetGenealogy",
   definition=function(object,rasK=NULL) {
     par(mfrow=c(1,2))
     plot(object)
-    tipcells <- genotypes[,2][as.numeric(coalescent_2_phylog(coalescent)$tip.label)]
+    tipcells <- genotypes[,2][as.numeric(coalescent_2_phylog(object,direction="downward",tip.color=tip.colors)$tip.label)]
     tipcols = rainbow(ncell(rasK))[tipcells]
     plotgenealogy(object@genealogy,tip.color=tipcols)
     legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(legend_right_move,0))
@@ -377,3 +420,5 @@ setMethod(
     
   }
 )
+
+

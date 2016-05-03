@@ -1,39 +1,6 @@
 #Initialisation
 
 
-# prior distributions
-prior=list()
-prior$K$busseola$a$distribution = "uniform"
-prior$K$busseola$model = data.frame(busseola="proportional")
-prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
-prior$R$busseola$a$distribution = "fixed"
-prior$R$busseola$model =data.frame(busseola="constant")
-prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
-prior$mutation_rate$busseola$a$distribution = "loguniform"
-prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
-prior$dispersion$busseola$model=data.frame(busseola="contiguous")
-prior$R$busseola$model = c(K="constant")
-
-prior$K$busseola$model =c("proportional")
-prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
-prior$R$busseola$a$distribution = "fixed"
-prior$R$busseola$model =c("constant")
-prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
-prior$mutation_rate$busseola$a$distribution = "loguniform"
-prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
-
-prior$dispersion$busseola$model="contiguous"
-prior$dispersion$busseola$model=data.frame(busseola="contiguous")
-prior$R$busseola$model = c("constant")
-prior$R$busseola$a$p = 20
-prior$mutation_rate$busseola$model =c("stepwise")
-prior$mutation_rate$busseola$a$distribution = "loguniform"
-prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
-prior$dispersion$busseola$model=c("contiguous")
-prior$dispersion$busseola$a$distribution="uniform"
-prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
 
 # fixed uniform normal loguniform lognormal
 
@@ -45,12 +12,98 @@ wd="~/Documents/Lauriane/busseola/"
 
 #  wd="/home/dupas/busseola"
 
+# wd= "~/busseola/"
 setwd(wd)
 library(raster)
 library(rgdal) # necessary to use function raster()
-source("Laurianne.R")
 source("class.R")
 source("generic.R");source("method.R")
+source("Laurianne.R")
+load("Prior.rda")
+
+
+#
+# Create priors
+#
+
+# Prior distributions
+Prior=list()
+Prior$K$busseola$a$distribution = "uniform"
+Prior$K$busseola$model = data.frame(busseola="proportional")
+Prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
+Prior$R$busseola$a$distribution = "fixed"
+Prior$R$busseola$model =data.frame(busseola="constant")
+Prior$R$busseola$a$p = 20
+Prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
+Prior$mutation_rate$busseola$a$distribution = "loguniform"
+Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
+Prior$dispersion$busseola$model=data.frame(busseola="contiguous")
+Prior$R$busseola$model = c(K="constant")
+
+Prior$K$busseola$model =c("proportional")
+Prior$K$busseola$a$p = data.frame(busseola=c(min=0.001,max=0.5))
+Prior$R$busseola$a$distribution = "fixed"
+Prior$R$busseola$model =c("constant")
+Prior$R$busseola$a$p = 20
+Prior$mutation_rate$busseola$model =data.frame(busseola= "stepwise")
+Prior$mutation_rate$busseola$a$distribution = "loguniform"
+Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
+
+Prior$dispersion$busseola$model="contiguous"
+Prior$dispersion$busseola$model=data.frame(busseola="contiguous")
+Prior$R$busseola$model = c("constant")
+Prior$R$busseola$a$p = 20
+Prior$mutation_rate$busseola$model =c("stepwise")
+Prior$mutation_rate$busseola$a$distribution = "loguniform"
+Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
+Prior$dispersion$busseola$model=c("contiguous")
+Prior$dispersion$busseola$a$distribution="uniform"
+Prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
+Prior<-new("prior",Prior)
+save(Prior,file="Prior.rda")
+
+populations <- raster(matrix(c(20,30,40,10,NA,NA,20,30,40),nrow=3),xmn=0,xmx=3,ymn=0,ymx=3)
+plot(populations,main=names(populations))
+names(populations)<-"busseola"
+save(populations,file= "populations.rda")
+
+#
+# Load data
+#
+
+
+#genealogie 
+load("genealogy.rda")
+
+# donnes genetique pour le mini jeu de donnees genotypes
+load("genotypes.rda")
+
+# population data
+load("populations.rda")
+
+# prior data
+load("Prior.rda")
+
+# spatial genetic classes
+gen <- new("genetic",data.frame(Locus1=genotypes[,"locus1"]),ploidy=as.integer(1), ploidyByrow=FALSE)
+spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=genotypes[,"Cell_numbers"])
+popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
+
+
+#
+# Simulate genealogy
+#
+Parameters <- sampleP(Prior)
+transition=transitionMatrixA(object1 = populations,object2 = Parameters)
+allelicTransition <- matrix(c(.999,0.001,0.001,0.999),nrow=2)
+dimnames(allelicTransition) <- list(c(120,122),c(120,122))
+transitionList=list(allelicTransition,transition)
+names(transitionList) <- c("locus1","demes")
+statesdf <- data.frame(nodeNo=1:5,locus1=c(122,122,120,120,122),demes=spgen@Cell_numbers)
+Ne=valuesA(populations)
+
+
+# 
 environmentalData <- raster("busseola.tif")
 genetData <- read.table("WBf16genelandcoord.txt")
 genetData <- cbind(genetData,read.table("WBf16genelandgeno.txt"))
@@ -66,16 +119,16 @@ plot(genetSP,add=TRUE)
 min(extract(environmentalData,genetData[,c("x","y")]))
 genetData[which(extract(environmentalData,genetData[,c("x","y")])<0.01),]
 genetData=cleanerData(genetData)
-listePrior=sampleP(prior) 
+listePrior=sampleP(Prior) 
 matriceMigration=migrationMatrixA(environmentalData,listePrior$dispersion$busseola$model,listePrior$dispersion$busseola$p)
-matriceTrans=transitionMatrixA(environmentalData,prior)
-listePrior=sampleP(prior) 
+matriceTrans=transitionMatrixA(environmentalData,Prior)
+listePrior=sampleP(Prior) 
 plot(raster(matriceMigration))
 plot(raster(matriceTrans))
 #diminution des pixels
 environmentalDataSimple=Aggregate_and_adjust_raster_to_data(environmentalData,xy=genetData[,c("x","y")],extend_band_size=1,aggregate_index=4)
 plot(environmentalDataSimple)
-matriceTrans=transitionMatrixA(environmentalDataSimple,prior)
+matriceTrans=transitionMatrixA(environmentalDataSimple,Prior)
 plot(raster(matriceTrans))
 matriceAbsorbante=absorbingTransitionA(matriceTrans,valuesA(environmentalDataSimple))
 plot(raster(matriceAbsorbante[[1]]))
@@ -89,13 +142,12 @@ absorbante=absorbingTransitionA(Matrice_de_transition)
 ma=raster(matrix(c(20,30,40,10,NA,NA,20,30,40),nrow=3,ncol=3))
 extent(ma)=c(0,3,0,3)
 names(ma)="busseola"
-values(ma)=c(20,30,40,10,NA,NA,20,30,40)
 plot(ma)
 dim(ma)
 matriceAbsMa=migrationMatrixA(ma,listePrior$dispersion$busseola$model,listePrior$dispersion$busseola$p)
 
 plot(raster(matriceAbsMa))
-matriceTransMa=transitionMatrixA(ma,prior)
+matriceTransMa=transitionMatrixA(ma,Prior)
 plot(raster(matriceTransMa))
 matriceAbsorbanteMa=absorbingTransitionA(matriceTransMa,valuesA(ma))
 plot(raster(matriceAbsorbanteMa[[1]]))
@@ -124,16 +176,59 @@ load("genealogy.rda")
 
 # donnes genetique pour le mini jeu de donnees genotypes
 load("genotypes.rda")
+
+# population data
+load("populations.rda")
 gen <- new("genetic",data.frame(Locus1=genotypes[,"Locus1"]),ploidy=as.integer(1), ploidyByrow=FALSE)
 spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=genotypes[,"Cell_numbers"])
+popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
 
 genealogy[[2]]
 library(ape)
 library(stringr)
 plot(coalescent_2_phylog(genealogy))
 coalescent=new("Genealogy",genealogy,genotypes[,2])
-plotgenealogy(coalescent)
+plotgenealogy(coalescent,tipcols = NA)
 geneasimple=new("LandGenealogy",ma,genealogy=coalescent)
 plotLandG(geneasimple,rasK = NULL)
+geneaandgenet=new("LandGenetGenalogy",geneasimple,Genotype=spgen)
 
 
+########## modify gealogy to colorate this
+
+genealogymod=change_genealogy(genealogy)
+
+
+# try to use phtools for colorate
+# our data = ma (raster simplify dim (3,3,1))
+
+## set seed for reproducibility
+set.seed(100)
+## load phytools
+library(phytools)
+## simulate a tree & some data
+tree <- pbtree(n = 26, scale = 1)
+tree$tip.label <- LETTERS[26:1]
+x <- fastBM(tree)
+
+Q <- matrix(c(-2, 1, 1, 1, -2, 1, 1, 1, -2), 3, 3)
+colnames(Q) <- rownames(Q) <- letters[1:3]
+x <- sim.history(tree, Q, anc = "a")$states
+print(x)
+# estimate ancestral states under a ER model
+fitER <- rerootingMethod(tree, x, model = "ER")
+print(fitER)
+plotTree(tree, setEnv = TRUE, offset = 0.5)
+nodelabels(node = as.numeric(rownames(fitER$marginal.anc)), pie = fitER$marginal.anc, 
+           piecol = c("blue", "red", "yellow"), cex = 0.6)
+tiplabels(pie = to.matrix(x, sort(unique(x))), piecol = c("blue", "red", "yellow"), 
+          cex = 0.3)
+
+
+# Mutation landscape
+#
+
+mutland <- raster(matrix(1:4,nrow=2))
+extent(mutland) <- c(0,2,0,2)
+plot( mutland,col=c("blue","red","yellow","green"))
+plot(SpatialPointsDataFrame(SpatialPoints(xyFromCell(mutland,1:4)),data.frame(Genotype=c("A","T","G","C"))),legend=c("A","T","G","C"),add=TRUE)

@@ -1,3 +1,9 @@
+prior <- setClass("prior",
+                  contains="list") # add validity (contains K, R and mutation_rate)
+
+parameters <- setClass("parameters",
+                       contains="list") # add validity (contains K, R and mutation_rate)
+
 
 Transition_Matrix <- setClass("Transition_Matrix",
                               slots = c(populationsize="RasterLayer"),
@@ -11,26 +17,35 @@ Transition_Matrix <- setClass("Transition_Matrix",
 
 
 Genealogy <- setClass("Genealogy",
-                      contains ="list",
-                      slots = c(NumCel="vector")
-                  
-)
+                      slots = c(age="numeric",nodeNo="integer",descendantList="list",
+                      States="data.frame")
+                      )
 
+listOfGenealogies <- setClass("listOfGenealogies",
+                      contains ="list",
+                      validity = function(object){
+                        if (all(lapply(object,"class")=="Genealogy")) TRUE else FALSE
+                      }
+                      )
+
+
+colored_genealogy <- setClass("colored_genealogy",
+                              contains="Genealogy",
+                              slots=c(color="integer"))
+
+# start to remove
 LandGenealogy <- setClass("LandGenealogy",
                            slots=c(genealogy="Genealogy"),
                            contains="RasterLayer")
+#stop to remove
 
-
-LandGenetGenealogy <- setClass( "LandGenetGenalogy",
-                                contains = "LandGenealogy",
-                                slot= c(Genotype="matrix"))
 genetic <- setClass("genetic",
                     slots = c(ploidy="integer",ploidyByrow="logical"),
                     contains="data.frame",
                     prototype = prototype(data.frame(locus1.1=c(200,202),locus1.2=c(204,200)),ploidy=as.integer(2), ploidyByrow=FALSE),
                     validity = function(object){
                       if (all(grepl("ocus",names(object)))) TRUE else stop("col names of genetic data.frame do not contain 'ocus'")
-                      if ((object@ploidy==2)&(object@ploidyByrow==FALSE)) {
+                      if ((object@ploidy==2)&(object@ploidyByrow==FALSE)) {#tip.color=tipcols
                         if (length(grep("\\.1",names(object)))==0|length(grep("\\.2",names(object)))==0) {
                           if ((grep("\\.1",names(object))%%2!=1)|(grep("\\.2",names(object))%%2!=0)){
                             stop("Columns of diploid by row FALSE data frame have to be named as follows: 'c('.1','.2','.1','.2')'")
@@ -39,6 +54,29 @@ genetic <- setClass("genetic",
                       }
                     }
 )
+
+
+spatialGenetic <- setClass("spatialGenetic",
+                           slots = c(x="numeric", y="numeric",Cell_numbers="numeric"),
+                           contains = "genetic",
+                           prototype = prototype(genetic(),x=c(1,2),y=c(1,1),Cell_numbers=c(1,2)),
+                           validity = function(object){
+                             if (length(object@x)!=length(object@y)) stop("slots x and y do not have the same length")
+                             if (length(object@x)!=nrow(object)) stop("slots x and genetic do not have the same number of individuals")
+                           }
+)
+
+GenealPopGenet <- setClass("GenealPopGenet",
+                   contains="Genealogy",
+                   slots=c(Genet="spatialGenetic",Pop="RasterBrick"),
+
+                   )
+
+# to remove start
+LandGenetGenealogy <- setClass( "LandGenetGenealogy",
+                                contains = "LandGenealogy",
+                                slot= c(Genotype="spatialGenetic"))
+# stop to remove
 
 genetic <- function(df=data.frame(locus1.1=c(200,202),locus1.2=c(204,200)),ploidy=NA, ploidyByrow=NA){
   if (is.na(ploidy)) { 
@@ -56,16 +94,6 @@ genetic <- function(df=data.frame(locus1.1=c(200,202),locus1.2=c(204,200)),ploid
   if (is.na(ploidyByrow)) ploidyByrow = !(any(grep(paste("\\.",ploidy,sep=""), colnames(df))))
   new("genetic",df,ploidy=ploidy,ploidyByrow=ploidyByrow)
 }
-
-spatialGenetic <- setClass("spatialGenetic",
-                           slots = c(x="numeric", y="numeric",Cell_numbers="numeric"),
-                           contains = "genetic",
-                           prototype = prototype(genetic(),x=c(1,2),y=c(1,1),Cell_numbers=c(1,2)),
-                           validity = function(object){
-                             if (length(object@x)!=length(object@y)) stop("slots x and y do not have the same length")
-                             if (length(object@x)!=nrow(object)) stop("slots x and genetic do not have the same number of individuals")
-                           }
-)
 
 spatialGenetic <- function(df=NA,x=NA,y=NA,Cell_numbers=NA)
 {
