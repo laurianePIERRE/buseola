@@ -34,14 +34,14 @@ setGeneric(
 setGeneric(
   name="distA",
   def=function(object)
-               { return(standardGeneric("distA"))
-    }
+  { return(standardGeneric("distA"))
+  }
 )
 
 setGeneric( 
   name="distanceMatrixA",
   def = function(object) { return(standardGeneric("distanceMatrixA"))}
-  )
+)
 
 setGeneric(
   name="migrationMatrixA",
