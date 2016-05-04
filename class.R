@@ -15,10 +15,14 @@ Transition_Matrix <- setClass("Transition_Matrix",
 ) 
 # nrow replace dim() because object is a matrix 
 
+branchTransition <- setClass("branchTransition",
+                             slots=c(statusDemes="integer",agesDemes="numeric",
+                                     statusAlleles="integer",agesAlleles="numeric"))
+
 
 Genealogy <- setClass("Genealogy",
-                      slots = c(age="numeric",nodeNo="integer",descendantList="list",
-                      States="data.frame")
+                      contains="branchTransition",
+                      slots = c(age="numeric",nodeNo="integer",descendantList="list")
                       )
 
 listOfGenealogies <- setClass("listOfGenealogies",

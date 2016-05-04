@@ -98,10 +98,13 @@ transition=transitionMatrixA(object1 = populations,object2 = Parameters)
 allelicTransition <- matrix(c(.999,0.001,0.001,0.999),nrow=2)
 dimnames(allelicTransition) <- list(c(120,122),c(120,122))
 transitionList=list(allelicTransition,transition)
-names(transitionList) <- c("locus1","demes")
-statesdf <- data.frame(nodeNo=1:5,locus1=c(122,122,120,120,122),demes=spgen@Cell_numbers,time=0)
-states <- statesdf[,c("locus1","demes")]
-colnames(states) <- c("state1","state2")
+names(transitionList) <- c("alleles","demes")
+statesdf <- data.frame(nodeNo=1:5,locus=c(122,122,120,120,122),demes=spgen@Cell_numbers,time=0)
+states <- statesdf[,c("locus","demes")]
+locus=statesdf$locus
+locus = as.integer(locus)
+demes=statesdf$demes
+demes=as.integer(demes)
 
 Ne=valuesA(populations)
 

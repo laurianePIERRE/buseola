@@ -183,9 +183,26 @@ setMethod(
 
 setMethod(
   f="statesOfLeaves",
-  signature="listOfGenealogies",
-  definition=function(object){
-    t(sapply(object,function(object) object@States)[,leaves(object)])}
+  signature=c("listOfGenealogies","character"),
+  definition=function(object,type){
+    switch(type,
+           statusDemes = sapply(object,function(object) object@statusDemes)[leaves(object)],
+           statusAlleles = sapply(object,function(object) object@statusAlleles)[leaves(object)],
+           agesDemes = sapply(object,function(object) object@agesDemes)[leaves(object)],
+           agesAlleles = sapply(object,function(object) object@agesAlleles)[leaves(object)])
+  }
+)
+
+setMethod(
+  f="currentState",
+  signature=c("listOfGenealogies","character","integer"),
+  definition=function(object,type,node){
+    switch(type,
+           statusDemes = lapply(nodes,function(i) coalescent[[i]]@statusDemes[length(coalescent[[i]]@statusDemes)]),
+           statusAlleles = lapply(nodes,function(i) coalescent[[i]]@statusAlleles[length(coalescent[[i]]@statusAlleles)]),
+           agesDemes = lapply(nodes,function(i) coalescent[[i]]@agesDemes[length(coalescent[[i]]@agesDemes)]),
+           agesAlleles = lapply(nodes,function(i) coalescent[[i]]@agesAlleles[length(coalescent[[i]]@agesAlleles)]))
+  }
 )
 
 
