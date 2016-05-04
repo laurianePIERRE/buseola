@@ -16,7 +16,11 @@ setGeneric(
 
 setGeneric(
   name="statesOfLeaves",
-  def= function(object) { return(standardGeneric("statesOfLeaves"))})
+  def= function(object,type) { return(standardGeneric("statesOfLeaves"))})
+
+setGeneric(
+  name="currentState",
+  def= function(object,type,nodes) { return(standardGeneric("currentState"))})
 
 setGeneric(
   name="varnames",
