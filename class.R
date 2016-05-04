@@ -29,10 +29,6 @@ listOfGenealogies <- setClass("listOfGenealogies",
                       )
 
 
-colored_genealogy <- setClass("colored_genealogy",
-                              contains="Genealogy",
-                              slots=c(color="integer"))
-
 # start to remove
 LandGenealogy <- setClass("LandGenealogy",
                            slots=c(genealogy="Genealogy"),
@@ -67,7 +63,7 @@ spatialGenetic <- setClass("spatialGenetic",
 )
 
 GenealPopGenet <- setClass("GenealPopGenet",
-                   contains="Genealogy",
+                   contains="listOfGenealogies",
                    slots=c(Genet="spatialGenetic",Pop="RasterBrick"),
 
                    )

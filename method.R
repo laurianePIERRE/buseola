@@ -185,7 +185,7 @@ setMethod(
   f="statesOfLeaves",
   signature="listOfGenealogies",
   definition=function(object){
-    unlist(lapply(object,function(object) object@States))[leaves(object)]}
+    t(sapply(object,function(object) object@States)[,leaves(object)])}
 )
 
 

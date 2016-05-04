@@ -194,6 +194,7 @@ sampleP <- function(prior) {
      
     }
   }
+#  names(Result) <- names(prior)
   return(new("parameters",Result))
 }
 
@@ -500,27 +501,27 @@ coalescence_prob_time_distribution_matrix <- function(transition,max_time_interv
 
 
 
-simul_coalescent <- function(transitionList, Ne, statesdf)#transitionList,geneticData)
+simul_coalescent <- function(transitionList, Ne, states)#transitionList,geneticData)
 {
   # transitionList =  list of transition matrix 
   #                   sublist demes contains list of demic transitions
   #                   sublist alleles contains list of allelic transitions for each locus
   # Ne = a data.frame with number of individuals in each deme
-  # statesdf : a data.frame with demic and allelic states as integer of each individual to simulate coalescent
+  # states : a data.frame with demic and allelic statess as integer of each individual to simulate coalescent
   Ne <- round(Ne);Ne[Ne==0]<-1
   coalescent <- list()
-  for (i in 1:nrow(statesdf)){
-    coalescent[[i]] <- new("Genealogy",age=0,nodeNo=i,descendantList=list(),States=statesdf[statesdf$nodeNo==i,])
+  for (i in 1:nrow(states)){
+    coalescent[[i]] <- new("Genealogy",age=0,nodeNo=i,descendantList=list(),States=states[i,])
     names(coalescent)[i]=i
   }
-  coalescent2= new("listOfGenealogies",coalescent)
+  coalescent= new("listOfGenealogies",coalescent)
   
   # list containing all the times and genes conserved by coalescent events
   # when 2 genes or more coalesce, only the the genes tagged by has the smallest number remains
   nodes = leaves(coalescent)# names of the tip nodes that will coalesce
   status_of_nodes <- statesOfLeaves(coalescent) # where were the genes sampled in the landscape
   #names(cell_number_of_nodes) <- nodes
-  parent_status_of_nodes <- cell_number_of_nodes # where the previous generation genes were in the landscape
+  parent_status_of_nodes <- status_of_nodes # where the previous generation genes were in the landscape
   nodes_remaining_by_status = list() # a list of cells with all the genes remaining in each cell after coalescence
   time=0 # backward time
   single_coalescence_events=0 # number of single coalescence events. Coalescence involving multiple individuals counts for 1 event.
@@ -580,7 +581,7 @@ simul_coalescent <- function(transitionList, Ne, statesdf)#transitionList,geneti
             # updating of vector parent_cell_number_of_nodes (adding the cell number of the new node and removing the nodes that disapeared)
             parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
             # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
-            coalescent[[nrow(statesdf)+single_coalescence_events]] <- list(age=time,descendantList=as.numeric(nodes_that_coalesce),nodeNo=new_node,States=data.frame(nodeNo=new_node,demes=cell))
+            coalescent[[nrow(state)+single_coalescence_events]] <- list(age=time,descendantList=as.numeric(nodes_that_coalesce),nodeNo=new_node,States=data.frame(nodeNo=new_node,demes=cell))
             # updating the nodes vector for the cell
             nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
             # updates the number of coalescent events 
