@@ -11,12 +11,16 @@ setGeneric(
   def= function(object) { return(standardGeneric("nodes"))})
 
 setGeneric(
-  name="leaves",
-  def= function(object) { return(standardGeneric("leaves"))})
+  name="state",
+  def=function(object,age,type,...) { return(standardGeneric("state"))})
 
 setGeneric(
-  name="leavesDemes",
-  def= function(object) { return(standardGeneric("leavesDemes"))})
+  name="currentState",
+  def= function(object,type,nodes) { return(standardGeneric("currentState"))})
+
+setGeneric(
+  name="currentNodes",
+  def= function(object,age) { return(standardGeneric("currentNodes"))})
 
 setGeneric(
   name="varnames",
@@ -34,14 +38,14 @@ setGeneric(
 setGeneric(
   name="distA",
   def=function(object)
-               { return(standardGeneric("distA"))
-    }
+  { return(standardGeneric("distA"))
+  }
 )
 
 setGeneric( 
   name="distanceMatrixA",
   def = function(object) { return(standardGeneric("distanceMatrixA"))}
-  )
+)
 
 setGeneric(
   name="migrationMatrixA",
@@ -72,3 +76,8 @@ setGeneric(
   name = "plotLandG",
   def=function(object,rasK) {return(standardGeneric("plotLandG"))}
 )
+
+setGeneric(
+   name="nodesByStates",
+   def=function(object,age,Which) {return(standardGeneric("nodesByStates"))}
+ )

@@ -15,27 +15,37 @@ Transition_Matrix <- setClass("Transition_Matrix",
 ) 
 # nrow replace dim() because object is a matrix 
 
+setClassUnion("numericOrNULL", c("numeric", "NULL"))
 
-Genealogy <- setClass("Genealogy",
-                      slots = c(age="numeric",nodeNo="integer",descendantList="list",
-                      States="data.frame")
+branchTransition <- setClass("branchTransition",
+                             slots=c(tipAge="numeric",ancestorAge="numeric",
+                                     statusDemes="integer",agesDemes="numeric",
+                                     statusAlleles="integer",agesAlleles="numeric"))
+
+
+Node <- setClass("Node",
+                      contains="branchTransition",
+                      slots = c(nodeNo="integer",descendantList="list")
                       )
 
-listOfGenealogies <- setClass("listOfGenealogies",
+listOfNodes <- setClass("listOfNodes",
                       contains ="list",
                       validity = function(object){
-                        if (all(lapply(object,"class")=="Genealogy")) TRUE else FALSE
+                        if (all(lapply(object,"class")=="Node")) TRUE else FALSE
                       }
                       )
 
-
-colored_genealogy <- setClass("colored_genealogy",
-                              contains="Genealogy",
-                              slots=c(color="integer"))
+spatialListOfNodes <- setClass("spatialListOfNodes",
+                        contains ="listOfNodes",
+                        slots=c(populationsSizes="RasterLayer"),
+                        validity = function(object){
+                          if (all(state(object,Inf,"Demes")%in%1:ncellA(object@populationsSizes))) TRUE else FALSE
+                        }
+)
 
 # start to remove
 LandGenealogy <- setClass("LandGenealogy",
-                           slots=c(genealogy="Genealogy"),
+                           slots=c(genealogy="Node"),
                            contains="RasterLayer")
 #stop to remove
 
@@ -67,7 +77,7 @@ spatialGenetic <- setClass("spatialGenetic",
 )
 
 GenealPopGenet <- setClass("GenealPopGenet",
-                   contains="Genealogy",
+                   contains="listOfNodes",
                    slots=c(Genet="spatialGenetic",Pop="RasterBrick"),
 
                    )

@@ -95,11 +95,17 @@ popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
 #
 Parameters <- sampleP(Prior)
 transition=transitionMatrixA(object1 = populations,object2 = Parameters)
-allelicTransition <- matrix(c(.999,0.001,0.001,0.999),nrow=2)
+allelicTransition <- matrix(c(.7,0.3,0.3,0.7),nrow=2)
 dimnames(allelicTransition) <- list(c(120,122),c(120,122))
 transitionList=list(allelicTransition,transition)
-names(transitionList) <- c("locus1","demes")
-statesdf <- data.frame(nodeNo=1:5,locus1=c(122,122,120,120,122),demes=spgen@Cell_numbers)
+names(transitionList) <- c("alleles","demes")
+statesdf <- data.frame(nodeNo=1:5,alleles=c(122,122,120,120,122),demes=spgen@Cell_numbers,time=0)
+states <- statesdf[,c("alleles","demes")]
+alleles=rownames(transitionList$alleles)
+alleleStatus = as.integer(statesdf$alleles)
+demes=rownames(transitionList$demes)
+demeStatus=as.integer(statesdf$demes)
+
 Ne=valuesA(populations)
 
 
