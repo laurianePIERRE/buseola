@@ -505,20 +505,57 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
   #                   sublist demes contains list of demic transitions
   #                   sublist alleles contains list of allelic transitions for each allele
   # Ne = a data.frame with number of individuals in each deme
-  # states : a data.frame with demic and allelic statess as integer of each individual to simulate coalescent
-  Ne <- round(Ne);Ne[Ne==0]<-1
+  # demes = all the possible deme status (attibutted cells in the raster lanscape of population sizes)
+  # alleles
+  # demeStatus= deme status of the nodes
+  # alleleStatus = allele status of the nodes
+  Ne <- round(Ne);Ne[Ne==0]<-1 
   coalescent <- list()
   for (i in 1:nrow(states)){
-    coalescent[[i]] <- new("Node",nodeNo=i,descendantList=list(),new("branchTransition",tipAge=0,ancestorAge=Inf,statusDemes=demeStatus[i],agesDemes=0,
+    coalescent[[i]] <- new("Node",nodeNo=i,descendantList=integer(),new("branchTransition",tipAge=0,ancestorAge=Inf,statusDemes=demeStatus[i],agesDemes=0,
                                                                      statusAlleles=alleleStatus[i],agesAlleles=0))
     names(coalescent)[i]=i
   }
+  numberOfNodes <- length(coalescent)
   coalescent= new("listOfNodes",coalescent)
   Age=0
-  numberNotCoalesced <- status(coalescent)
-  #wwhile () 
+  notCoalesced <- which(state(object = coalescent,age = 0,type = "ancestorAge")==Inf)
+  while(length(notCoalesced)>1){
+    Age=Age+1
+    nodesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneByDemeAndAllele")
+    nodesAndStatesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneAndDemeAndAllele")
+    for (States in names(nodesAndStatesThatCanCoalesce)){
+      # get get the Deme of the nodes that can coalesce in the list
+      currentDeme = nodesAndStatesThatCanCoalesce[[States]]$statusDemes[1]
+      currentAllele = nodesAndStatesThatCanCoalesce[[States]]$statusAlleles[1]
+      if (runif(1,0,1) < 1/(2*Ne[currentDeme,])){
+        numberOfNodes <- numberOfNodes+as.integer(1)
+        coalescent[[numberOfNodes]] <- new("Node",tipAge=Age,ancestorAge=Inf,
+                                             statusDemes=currentDeme,agesDemes=Age,
+                                             statusAlleles=currentAllele,agesAlleles=Age,
+                                             nodeNo=numberOfNodes,
+                                             descendantList=nodesThatCanCoalesce[[States]])
+        lapply(nodesThatCanCoalesce[[States]],function(i) coalescent[[i]]@ancestorAge=Age)
+      }
+    }
+    
+          
+          branchTransition <- setClass("branchTransition",
+                                       slots=c(tipAge="numeric",ancestorAge="numeric",
+                                               statusDemes="integer",agesDemes="numeric",
+                                               statusAlleles="integer",agesAlleles="numeric"))
+        
+        
+        Node <- setClass("Node",
+                         contains="branchTransition",
+                         slots = c(nodeNo="integer",descendantList="list")
+        )
+        
+      }
+    }
+  }
 }
-
+  
 simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, alleleStatus)#transitionList,geneticData)
 {
   # transitionList =  list of transition matrix 

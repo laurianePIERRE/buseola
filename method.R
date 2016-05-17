@@ -202,6 +202,11 @@ setMethod(
              NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
              whichNBS<- which(lapply(NBS,nrow)>1)
              lapply(whichNBS,function(x) as.integer(row.names(NBS[[x]])))},
+           notAloneAndDemeAndAllele = {
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             whichNBS<- which(lapply(NBS,nrow)>1)
+             lapply(whichNBS,function(x) NBS[[x]])},
            notAloneByDeme = {
              states=state(object,age,"Demes")
              NBS=split(states,states)
@@ -242,9 +247,10 @@ setMethod(
            aparitionAlleles = unlist(lapply(Nodes,function(i){
              apparition <- object[[i]]@agesAlleles[(object[[i]]@agesAlleles<=age)]
              apparition[length(apparition)]})),
-           tipAge = 
-           
-    )
+           tipAge =  unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@tipAge})),
+           ancestorAge =  unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@ancestorAge})))
   }
 )
 
