@@ -499,7 +499,25 @@ coalescence_prob_time_distribution_matrix <- function(transition,max_time_interv
 #                            #
 ##############################
 
-
+simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, alleleStatus)#transitionList,geneticData)
+{
+  # transitionList =  list of transition matrix 
+  #                   sublist demes contains list of demic transitions
+  #                   sublist alleles contains list of allelic transitions for each allele
+  # Ne = a data.frame with number of individuals in each deme
+  # states : a data.frame with demic and allelic statess as integer of each individual to simulate coalescent
+  Ne <- round(Ne);Ne[Ne==0]<-1
+  coalescent <- list()
+  for (i in 1:nrow(states)){
+    coalescent[[i]] <- new("Node",nodeNo=i,descendantList=list(),new("branchTransition",tipAge=0,ancestorAge=Inf,statusDemes=demeStatus[i],agesDemes=0,
+                                                                     statusAlleles=alleleStatus[i],agesAlleles=0))
+    names(coalescent)[i]=i
+  }
+  coalescent= new("listOfNodes",coalescent)
+  Age=0
+  numberNotCoalesced <- status(coalescent)
+  #wwhile () 
+}
 
 simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, alleleStatus)#transitionList,geneticData)
 {
@@ -511,17 +529,17 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
   Ne <- round(Ne);Ne[Ne==0]<-1
   coalescent <- list()
   for (i in 1:nrow(states)){
-    coalescent[[i]] <- new("Genealogy",age=0,nodeNo=i,descendantList=list(),new("branchTransition",statusDemes=demeStatus[i],agesDemes=0,
+    coalescent[[i]] <- new("Node",nodeNo=i,descendantList=list(),new("branchTransition",tipAge=0,ancestorAge=Inf,statusDemes=demeStatus[i],agesDemes=0,
                                                                                 statusAlleles=alleleStatus[i],agesAlleles=0))
     names(coalescent)[i]=i
   }
-  coalescent= new("listOfGenealogies",coalescent)
+  coalescent= new("listOfNodes",coalescent)
   
   # list containing all the times and genes conserved by coalescent events
   # when 2 genes or more coalesce, only the the genes tagged by has the smallest number remains
-  nodes = leaves(coalescent)# names of the tip nodes that will coalesce
-  deme_status_of_nodes <- statesOfLeaves(coalescent,"statusDemes") # where were the genes sampled in the landscape
-  allele_status_of_nodes <- statesOfLeaves(coalescent,"statusAlleles") # where were the genes sampled in the landscape
+  deme_status_of_nodes <- state(coalescent,0,"Demes") # where were the genes sampled in the landscape
+  allele_status_of_nodes <- state(coalescent,0,"Alleles") # where were the genes sampled in the landscape
+  nodes = names(deme_status_of_nodes)# names of the tip nodes that will coalesce
   #names(cell_number_of_nodes) <- nodes
   parent_deme_status_of_nodes <- deme_status_of_nodes # where the previous generation genes were in the landscape
   parent_allele_status_of_nodes <- allele_status_of_nodes # where the previous generation genes were in the landscape
@@ -530,19 +548,20 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
   time=0 # backward time
   single_coalescence_events=0 # number of single coalescence events. Coalescence involving multiple individuals counts for 1 event.
   single_and_multiple_coalescence_events=0 # number of single and multiple coalescence events. Coalescence involving multiple individuals counts for "the number of individuals - 1" events.
-  for (deme in demes)#cell=1)
-  {
-    nodes_remaining_by_deme[[deme]] <- which(deme_status_of_nodes==deme)
-  }
-  for (allele in alleles)#cell=1)
-  {
-    nodes_remaining_by_allele[[as.character(allele)]] <- which(allele_status_of_nodes==allele)
-  }
+#  for (deme in demes)#cell=1)
+#  {
+#    nodes_remaining_by_deme[[deme]] <- which(deme_status_of_nodes==deme)
+#  }
+#  for (allele in alleles)#cell=1)
+#  {
+#    nodes_remaining_by_allele[[as.character(allele)]] <- which(allele_status_of_nodes==allele)
+#  }
+  currentNodesByStates <- nodesByStates(coalescent,0,"all")
   while (length(unlist(nodes_remaining_by_deme))>1) # coalescent process continues untill we reach comon ancestor
   {
-    # migration
-    # we localize the parents in the landscape by sampling in the backward transition matrix
-    for (node in nodes)#gene=1;node=1# parent_cell_number_of_nodes
+    # migration and mutation
+    # we localize the parents in the spatial and genetic landscapes by sampling in the backward transition matrix
+    for (node in nodes)#node = nodes[1];node = nodes[2];node = nodes[3]# parent_cell_number_of_nodes
     {
       # migrations
       parent_deme_status_of_nodes[node] = sample(demes,size=1,prob=c(transitionList$demes[as.character(deme_status_of_nodes[node]),]))
@@ -556,7 +575,7 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
     nodes_that_changed_deme <- names(which(parent_deme_status_of_nodes!=deme_status_of_nodes))
     nodes_that_changed_allele <- names(which(parent_allele_status_of_nodes!=allele_status_of_nodes))
     if (length(nodes_that_changed_deme)!=0) {
-      for (node in nodes_that_changed_deme){
+      for (node in nodes_that_changed_deme){#node=nodes_that_changed_deme[1]
         coalescent[[node]]@statusDemes <- append(coalescent[[node]]@statusDemes,
                                                                     as.integer(parent_deme_status_of_nodes[node])) 
         coalescent[[node]]@agesDemes <- append(coalescent[[node]]@agesDemes,time)
@@ -569,16 +588,34 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
         coalescent[[node]]@agesAlleles <- append(coalescent[[node]]@agesAlleles,time)
       }
     }
+    # which node can coalesce
+    demestates <- currentState(coalescent,"statusDemes",nodes)
+    allelestates <- currentState(coalescent,"statusAlleles",nodes)
+    demestatesMat <- matrix(demestates,nrow=length(demestates),ncol=length(demestates))
+    allelestatesMat <- matrix(allelestates,nrow=length(allelestates),ncol=length(allelestates))
+    sameallele <- rowSums(allelestatesMat == t(allelestatesMat))>1
+    sameDeme <- rowSums(demestatesMat == t(demestatesMat))>1
     # we now perform coalescence within each cell of the landscape for the parents
-    for (deme in demes)#cell=1;cell=2;cell=3;cell=4;cell=5;cell=26;cell=10
+    for (deme in demes)#deme=1;deme=deme+1
     {     
-      nodes_remaining_in_the_deme = nodes_remaining_by_deme[[deme]] <- as.numeric(names(which(parent_deme_status_of_nodes==deme)))
-      # we obtain the identities in the geneticData table (line) of the genes remaining in the cell
+      nodes_remaining_in_the_deme = nodes_remaining_by_deme[[deme]] <- as.integer(names(which(parent_deme_status_of_nodes==deme)))
+      # we obtain the identities of the genes remaining in the deme
       if (length(nodes_remaining_in_the_deme)>1) 
       {
-        if (allele in alleles)
+        alleles_in_the_deme <- currentState(coalescent,"statusAlleles",nodes_remaining_in_the_deme)
+        whichNodeCanCoalesce
+#        allelesDuplicated <- duplicated(alleles_in_the_deme)
+        for (allele in as.integer(levels(as.factor(alleles_in_the_deme)))){
+          nodes_identicals <-  nodes_remaining_in_the_deme[which(alleles_in_the_deme==allele)]
+          if (length(nodes_identicals)>1)
           {
-          nodes_remaining_in_the_allele = nodes_remaining_by_allele[[allele]] <- as.numeric(names(which(parent_deme_status_of_nodes==allel)))
+            smp = sample(Ne[cell,],length(nodes_remaining_in_the_cell),replace=TRUE)
+            
+          }
+        }
+        if (length(identicals)>1)
+          {
+          nodes_remaining <- as.numeric(names(which(parent_deme_status_of_nodes==allel)))
           # We create a logical matrix in which lines represent genes of the sample (nodes) remaining in the cell 
           # and column represent their parent chosen from the whole population of size Ne[cell,]. 
           # If two genes (lines) coalesce if they have TRUE for the same parent (column) 

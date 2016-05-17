@@ -11,16 +11,16 @@ setGeneric(
   def= function(object) { return(standardGeneric("nodes"))})
 
 setGeneric(
-  name="leaves",
-  def= function(object) { return(standardGeneric("leaves"))})
-
-setGeneric(
-  name="statesOfLeaves",
-  def= function(object,type) { return(standardGeneric("statesOfLeaves"))})
+  name="state",
+  def=function(object,age,type,...) { return(standardGeneric("state"))})
 
 setGeneric(
   name="currentState",
   def= function(object,type,nodes) { return(standardGeneric("currentState"))})
+
+setGeneric(
+  name="currentNodes",
+  def= function(object,age) { return(standardGeneric("currentNodes"))})
 
 setGeneric(
   name="varnames",
@@ -76,3 +76,8 @@ setGeneric(
   name = "plotLandG",
   def=function(object,rasK) {return(standardGeneric("plotLandG"))}
 )
+
+setGeneric(
+   name="nodesByStates",
+   def=function(object,age,Which) {return(standardGeneric("nodesByStates"))}
+ )

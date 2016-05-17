@@ -168,40 +168,98 @@ setMethod(
 
 setMethod(
   f="nodes",
-  signature="listOfGenealogies",
+  signature="listOfNodes",
   definition=function(object){
     unlist(lapply(object,function(sub) sub@nodeNo))
   }
 )
 
 setMethod(
-  f="leaves",
-  signature="listOfGenealogies",
-  definition=function(object){
-    which(lapply((lapply(object,function(x) x@descendantList)),"length")==0)  }
-)
-
-setMethod(
-  f="statesOfLeaves",
-  signature=c("listOfGenealogies","character"),
-  definition=function(object,type){
-    switch(type,
-           statusDemes = sapply(object,function(object) object@statusDemes)[leaves(object)],
-           statusAlleles = sapply(object,function(object) object@statusAlleles)[leaves(object)],
-           agesDemes = sapply(object,function(object) object@agesDemes)[leaves(object)],
-           agesAlleles = sapply(object,function(object) object@agesAlleles)[leaves(object)])
+  f="currentNodes",
+  signature=c("listOfNodes","numeric"),
+  definition=function(object,age){
+    which((sapply(object,function(object) object@ancestorAge)>=(age+1E-15))&(sapply(object,function(object) object@tipAge)<=age))
   }
 )
 
 setMethod(
-  f="currentState",
-  signature=c("listOfGenealogies","character","integer"),
-  definition=function(object,type,node){
+  f="nodesByStates",
+  signature=c("listOfNodes","numeric","character"),
+  definition=function(object,age,Which){
+    switch(Which,
+           allByDemeAndAllele = {
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             lapply(NBS,function(x) as.numeric(row.names(x)))},
+           allByDeme = {
+             states=state(object,age,"Demes")
+             lapply(split(states,states),function(x) as.integer(names(x)))},
+           allAllele = {
+             states=state(object,age,"Alleles")
+             lapply(split(states,states),function(x) as.integer(names(x)))},
+           notAloneByDemeAndAllele = {
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             whichNBS<- which(lapply(NBS,nrow)>1)
+             lapply(whichNBS,function(x) as.integer(row.names(NBS[[x]])))},
+           notAloneByDeme = {
+             states=state(object,age,"Demes")
+             NBS=split(states,states)
+             whichNBS<- which(lapply(NBS,length)>1)
+             lapply(whichNBS,function(x) as.integer(names(NBS[[x]])))},
+           notAloneByAllele = {
+             states=state(object,age,"Alleles")
+             NBS=split(states,states)
+             whichNBS<- which(lapply(NBS,length)>1)
+             lapply(whichNBS,function(x) as.integer(names(NBS[[x]])))}
+    )    
+  }
+)
+
+
+setMethod(
+  f="state",
+  signature=c("listOfNodes","numeric","character"),
+  definition=function(object,age,type){
+    Nodes = currentNodes(object,age)
     switch(type,
-           statusDemes = lapply(nodes,function(i) coalescent[[i]]@statusDemes[length(coalescent[[i]]@statusDemes)]),
-           statusAlleles = lapply(nodes,function(i) coalescent[[i]]@statusAlleles[length(coalescent[[i]]@statusAlleles)]),
-           agesDemes = lapply(nodes,function(i) coalescent[[i]]@agesDemes[length(coalescent[[i]]@agesDemes)]),
-           agesAlleles = lapply(nodes,function(i) coalescent[[i]]@agesAlleles[length(coalescent[[i]]@agesAlleles)]))
+           DemesAndAlleles = data.frame(
+             statusDemes = unlist(lapply(Nodes,function(i) {
+               demes <- object[[i]]@statusDemes[(object[[i]]@agesDemes<=age)]
+               demes[length(demes)]})),
+             statusAlleles = unlist(lapply(Nodes,function(i) {
+               alleles <- object[[i]]@statusAlleles[(object[[i]]@agesAlleles<=age)]
+               alleles[length(alleles)]}))),
+           Demes = unlist(lapply(Nodes,function(i) {
+             demes <- object[[i]]@statusDemes[(object[[i]]@agesDemes<=age)]
+             demes[length(demes)]})),
+           Alleles = unlist(lapply(Nodes,function(i) {
+             alleles <- object[[i]]@statusAlleles[(object[[i]]@agesAlleles<=age)]
+             alleles[length(alleles)]})),
+           aparitionDemes = unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@agesDemes[(object[[i]]@agesDemes<=age)]
+             apparition[length(apparition)]})),
+           aparitionAlleles = unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@agesAlleles[(object[[i]]@agesAlleles<=age)]
+             apparition[length(apparition)]})),
+           tipAge = 
+           
+    )
+  }
+)
+
+
+setMethod(
+  f="currentState",
+  signature=c("listOfNodes","character","integer"),
+  definition=function(object,type,nodes){
+    switch(type,
+           allStatus = data.frame(statusDemes = unlist(lapply(nodes,function(i) coalescent[[i]]@statusDemes[length(coalescent[[i]]@statusDemes)])),
+                                  statusAlleles = unlist(lapply(nodes,function(i) coalescent[[i]]@statusAlleles[length(coalescent[[i]]@statusAlleles)]))),
+           statusDemes = unlist(lapply(nodes,function(i) coalescent[[i]]@statusDemes[length(coalescent[[i]]@statusDemes)])),
+           statusAlleles = unlist(lapply(nodes,function(i) coalescent[[i]]@statusAlleles[length(coalescent[[i]]@statusAlleles)])),
+           agesDemes = unlist(lapply(nodes,function(i) coalescent[[i]]@agesDemes[length(coalescent[[i]]@agesDemes)])),
+           agesAlleles = unlist(lapply(nodes,function(i) coalescent[[i]]@agesAlleles[length(coalescent[[i]]@agesAlleles)])))
   }
 )
 
@@ -419,7 +477,7 @@ setMethod(
 
 setMethod(
   f="plotgenealogy",
-  signature="Genealogy",
+  signature="listOfNodes",
   definition = function(object,tipcols=NA)    {
     if(is.na(tipcols)) { tipcols=1}
     plot(coalescent_2_phylog(object),direction="downward",tip.color=tipcols)
