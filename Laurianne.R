@@ -535,17 +535,19 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
                                              statusAlleles=currentAllele,agesAlleles=Age,
                                              nodeNo=numberOfNodes,
                                              descendantList=nodesThatCanCoalesce[[States]])
-        lapply(nodesThatCanCoalesce[[States]],function(i) coalescent[[i]]@ancestorAge=Age)
+        names(coalescent)[numberOfNodes] <- numberOfNodes
+        lapply(coalescent ,function(x) modifyList(x,x[[x]]@ancestorAge=Age)
       }
     }
+    for (node in nodes)#node = nodes[1];node = nodes[2];node = nodes[3]# parent_cell_number_of_nodes
+    {
+      # migrations
+      parent_deme_status_of_nodes[node] = sample(demes,size=1,prob=c(transitionList$demes[as.character(deme_status_of_nodes[node]),]))
+      # mutations
+      parent_allele_status_of_nodes[node] = sample(alleles,size=1,prob=c(transitionList$alleles[as.character(allele_status_of_nodes[node]),]))
+    }
     
-          
-          branchTransition <- setClass("branchTransition",
-                                       slots=c(tipAge="numeric",ancestorAge="numeric",
-                                               statusDemes="integer",agesDemes="numeric",
-                                               statusAlleles="integer",agesAlleles="numeric"))
-        
-        
+         
         Node <- setClass("Node",
                          contains="branchTransition",
                          slots = c(nodeNo="integer",descendantList="list")

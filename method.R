@@ -255,6 +255,33 @@ setMethod(
 )
 
 
+setMethod("setState",
+          signature=c("listOfNodes","integer","character","list"),
+          definition=function(object,Nodes,attribut,newValues){
+            switch(attribut,
+                   ancestorAge={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@ancestorAge = newValues[[i]]}},
+                   tipAge={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@tipAge = newValues[[i]]}},
+                   statusDemes={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@statusDemes = append(object[[Nodes[i]]]@statusDemes,newValues[[i]])}},
+                   ageDemes={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@ageDemes = append(object[[Nodes[i]]]@ageDemes,newValues[[i]])}},
+                   statusAlleles={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@statusAlleles = append(object[[Nodes[i]]]@statusAlleles,newValues[[i]])}},
+                   ageAlleles={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@ageAlleles = append(object[[Nodes[i]]]@ageAlleles,newValues[[i]])}},
+                   nodeNo={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@nodeNo = newValues[[i]]
+                     names(object)[Nodes[i]] <- newValues[[i]]}},
+                   descendants={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@descendants = newValues[[i]]}})
+          object
+          }
+)
+            
+
+
 setMethod(
   f="currentState",
   signature=c("listOfNodes","character","integer"),

@@ -81,3 +81,8 @@ setGeneric(
    name="nodesByStates",
    def=function(object,age,Which) {return(standardGeneric("nodesByStates"))}
  )
+
+setGeneric(name="setState",
+           def=function(object,Nodes,attribut,newValues){return(standardGeneric("setState"))}
+)
+          
