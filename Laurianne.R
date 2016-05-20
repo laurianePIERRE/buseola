@@ -536,7 +536,7 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
                                              nodeNo=numberOfNodes,
                                              descendantList=nodesThatCanCoalesce[[States]])
         names(coalescent)[numberOfNodes] <- numberOfNodes
-        lapply(coalescent ,function(x) modifyList(x,x[[x]]@ancestorAge=Age)
+        #lapply(coalescent ,function(x) modifyList(x,x[[x]]@ancestorAge=Age)
       }
     }
     for (node in nodes)#node = nodes[1];node = nodes[2];node = nodes[3]# parent_cell_number_of_nodes
@@ -554,8 +554,7 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
         )
         
       }
-    }
-  }
+
 }
   
 simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, alleleStatus)#transitionList,geneticData)

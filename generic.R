@@ -85,4 +85,7 @@ setGeneric(
 setGeneric(name="setState",
            def=function(object,Nodes,attribut,newValues){return(standardGeneric("setState"))}
 )
+
+setGeneric(name="sampleP",
+           def=function(prior){return(standardGeneric("sampleP"))})
           

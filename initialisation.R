@@ -87,7 +87,7 @@ load("Prior.rda")
 # spatial genetic classes
 gen <- new("genetic",data.frame(Locus1=genotypes[,"locus1"]),ploidy=as.integer(1), ploidyByrow=FALSE)
 spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=genotypes[,"Cell_numbers"])
-popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
+#popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
 
 
 #

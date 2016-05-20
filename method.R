@@ -167,6 +167,38 @@ setMethod(
   })
 
 setMethod(
+  f="sampleP",
+  signature="prior",
+  definition=function(prior) {
+  Result=list()
+  for(parametreBio in names(prior)) {
+    for (variableEnvironnemental in names(prior[[parametreBio]])) {
+      Result[[parametreBio]] <- list() 
+      
+      
+      Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution,
+                                                                    uniform=data.frame(variableEnvironnemental=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    fixed =data.frame(variableEnvironnemental=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                                                    normal=data.frame(variableEnvironnemental=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    loguniform=data.frame(variableEnvironnemental=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))),
+                                                                    uniform=data.frame(variableEnvironnemental= runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    fixed =data.frame(variableEnvironnemental= prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                                                    normal=data.frame(variableEnvironnemental =rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    loguniform=data.frame(variableEnvironnemental= log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
+      
+      Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
+      colnames(Result[[parametreBio]][[variableEnvironnemental]]$p)=variableEnvironnemental
+      rownames(Result[[parametreBio]][[variableEnvironnemental]]$p)=c("a")
+      names(Result[[parametreBio]][[variableEnvironnemental]]$model)=variableEnvironnemental
+      
+    }
+  }
+  #  names(Result) <- names(prior)
+  return(new("parameters",Result))
+}
+)
+
+setMethod(
   f="nodes",
   signature="listOfNodes",
   definition=function(object){
