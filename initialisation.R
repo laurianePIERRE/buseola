@@ -238,3 +238,7 @@ mutland <- raster(matrix(1:4,nrow=2))
 extent(mutland) <- c(0,2,0,2)
 plot( mutland,col=c("blue","red","yellow","green"))
 plot(SpatialPointsDataFrame(SpatialPoints(xyFromCell(mutland,1:4)),data.frame(Genotype=c("A","T","G","C"))),legend=c("A","T","G","C"),add=TRUE)
+
+
+load("coalescent.rda")
+coalescent

@@ -320,7 +320,7 @@ AbsorbingTransition <- function(transition,N)
 
 change_genealogy <- function(genealogy) {
   for (event in 1:length(genealogy)) {
-    genealogy[[event]]$colescing<-list(c(genealogy[[event]]$coalescing,c("vector of position","x","y"),c("changement of position","x")))
+    genealogy[[event]]$colesc/home/egce/Téléchargements/coalescent.rdaing<-list(c(genealogy[[event]]$coalescing,c("vector of position","x","y"),c("changement of position","x")))
   }
 genealogy
   }
@@ -414,6 +414,21 @@ coalescent_2_newick <- function(coalescent)
   tree
 }
 
+# to an other type of genealogy
+
+coalescent_2_newick_new <- function(coalescent)
+{
+  #  tree=paste("(",coalescent[[length(coalescent)]]$new_node,")",sep="")
+  tree=paste(" ",coalescent[[length(coalescent)]]$nodeNo," ",sep="")
+  for (i in length(coalescent):1)
+  {
+    Time = coalescent[[i]]age
+    coalesc <- as.character(coalescent[[i]]@descendantList)
+    tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]@nodeNo)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
+  }
+  tree <- gsub(" ","",paste(tree,";",sep=""))
+  tree
+}
 
 coalescent_2_phylog <- function(coalescent)
 {
@@ -571,7 +586,11 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
                                                                                 statusAlleles=alleleStatus[i],agesAlleles=0))
     names(coalescent)[i]=i
   }
+
+  coalescent = new("listOfGenealogies",coalescent)
+
   coalescent= new("listOfNodes",coalescent)
+
   
   # list containing all the times and genes conserved by coalescent events
   # when 2 genes or more coalesce, only the the genes tagged by has the smallest number remains
@@ -653,6 +672,35 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
         }
         if (length(identicals)>1)
           {
+<<<<<<< HEAD
+            # there is coalescence 
+            single_coalescence_events = single_coalescence_events +1
+            # which(p
+            coalescent_2_newick <- function(coalescent)
+            {
+              #  tree=paste("(",coalescent[[length(coalescent)]]$new_node,")",sep="")
+              tree=paste(" ",coalescent[[length(coalescent)]]$new_node," ",sep="")
+              for (i in length(coalescent):1)
+              {
+                Time = coalescent[[i]]$time
+                coalesc <- as.character(coalescent[[i]]$coalescing)
+                tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]$new_node)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
+              }
+              tree <- gsub(" ","",paste(tree,";",sep=""))
+              tree
+            }#arentoffspringmatrix[,multiple]) identifies which node in the column coalesce
+            nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
+            # attibutes new node number to the ancestor, adds this to the nodes vector, removes the nodes that coalesced from the node vector
+            new_node <- max(nodes)+1;nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
+            # updating of vector parent_cell_number_of_nodes (adding the cell number of the new node and removing the nodes that disapeared)
+            parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
+            # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
+            coalescent[[nrow(statesdf)+single_coalescence_events]] <- new("Genealogy",age=time,descendantList=as.numeric(nodes_that_coalesce),nodeNo=new_node,States=data.frame(nodeNo=new_node,demes=cell))
+            # updating the nodes vector for the cell
+            nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
+            # updates the number of coalescent events 
+            single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
+=======
           nodes_remaining <- as.numeric(names(which(parent_deme_status_of_nodes==allel)))
           # We create a logical matrix in which lines represent genes of the sample (nodes) remaining in the cell 
           # and column represent their parent chosen from the whole population of size Ne[cell,]. 
@@ -685,6 +733,7 @@ simul_coalescent <- function(transitionList, Ne, demes, alleles, demeStatus, all
               # updates the number of coalescent events 
               single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
             }
+>>>>>>> 886d689d2562d56402aab86d4c5c1244a903ce68
           }
         }
       }
