@@ -89,3 +89,5 @@ setGeneric(name="setState",
 setGeneric(name="sampleP",
            def=function(prior){return(standardGeneric("sampleP"))})
           
+setGeneric(name="simul_coalescent",
+           def=function(prior){return(standardGeneric("sampleP"))})

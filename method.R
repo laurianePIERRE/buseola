@@ -43,7 +43,7 @@ setMethod(
 
 setMethod(
   f = "valuesA",
-  signature = "Transition_Matrix",  
+  signature = "demeTransition",  
   definition = function(object){
     x=na.omit(values(object@populationsize))
     colnames(x)=names(object)
@@ -174,8 +174,6 @@ setMethod(
   for(parametreBio in names(prior)) {
     for (variableEnvironnemental in names(prior[[parametreBio]])) {
       Result[[parametreBio]] <- list() 
-      
-      
       Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution,
                                                                     uniform=data.frame(variableEnvironnemental=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
                                                                     fixed =data.frame(variableEnvironnemental=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
@@ -451,10 +449,20 @@ setMethod(
   
   )
 
+setAs("demeTransition", "matrix",
+       function(from , to){
+       })
+
+
+setMethod(f="plot", 
+          signature="demeTransition",
+          definition = function(x, y , ...){
+            
+})
 
 setMethod(
   f="absorbingTransitionA",
-  signature="Transition_Matrix",
+  signature="demeTransition",
   definition = function(object){
     N=valuesA(object)
     N[N<1]=1
@@ -565,3 +573,7 @@ setMethod(
 )
 
 
+setMethod(
+  f="simul_coalescent",
+  definition = function(transitionList, Ne, demes, alleles, demeStatus, alleleStatus)#transitionList,geneticData)
+  {})
