@@ -24,8 +24,11 @@ setMethod(
   f = "valuesA",
   signature = "RasterLayer",
   definition = function(object){
-    x=data.frame(variable=na.omit(values(object)))
-    colnames(x)=names(object)
+    #x=data.frame(variable=na.omit(values(object)))
+    select <- !is.na(values(object))
+    x=values(object)[select]
+    names(x) <- which(select)
+    #colnames(x)=names(object)
   x
   }
   )
@@ -36,17 +39,18 @@ setMethod(
   definition = function(object){
     x=na.omit(values(object))
     colnames(x)=names(object)
+    rownames(x)=cellNumA(object)
     x
     }
 )
 
-
 setMethod(
   f = "valuesA",
-  signature = "demeTransition",  
+  signature = "RasterStack",
   definition = function(object){
-    x=na.omit(values(object@populationsize))
-    colnames(x)=names(object)
+    x=na.omit(values(object))
+    colnames(x)=names(x)
+    rownames(x) <- cellNumA(object)
     x
   }
 )
@@ -55,21 +59,28 @@ setMethod(
   f = "xyFromCellA",
   signature = "RasterLayer",
   definition = function(object){
-    xyFromCell(object,cellNumA(object))
+    df=xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
   }
 )
+
 setMethod(
   f = "xyFromCellA",
   signature = "RasterStack",
   definition = function(object){
-    xyFromCell(object,cellNumA(object))
+    df =xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+    df
   }
 )
+
 setMethod(
   f = "xyFromCellA",
   signature = "RasterBrick",
   definition = function(object){
-    xyFromCell(object,cellNumA(object))
+    df=xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+    df
   }
 )
 
@@ -101,16 +112,6 @@ setMethod(
 
     
     
-setMethod(
-      f = "valuesA",
-      signature = "RasterStack",
-      definition = function(object){
-        x=na.omit(values(object))
-        colnames(x)=names(object)
-        x
-      }
-)
-
 # copier la fonction distanceMatrix  dans la method en  l'adaptant --> idem pour transitionMatrix        
 
 
@@ -120,6 +121,7 @@ setMethod(
   definition = function(object) {
       coords = xyFromCellA(object)
       distance = as.matrix(dist(coords)) 
+      dimnames(distance) <- list(which(!is.na(values(object))),which(!is.na(values(object))))
       distance
   }
 )
@@ -575,5 +577,60 @@ setMethod(
 
 setMethod(
   f="simul_coalescent",
-  definition = function(transitionList, Ne, demes, alleles, demeStatus, alleleStatus)#transitionList,geneticData)
-  {})
+  definition = function(transitionModel, demeStatus, alleleStatus)#transitionList,geneticData)
+    {
+      # transitionList =  list of transition matrix 
+      #                   sublist demes contains list of demic transitions
+      #                   sublist alleles contains list of allelic transitions for each allele
+      # Ne = a data.frame with number of individuals in each deme
+      # demes = all the possible deme status (attibutted cells in the raster lanscape of population sizes)
+      # alleles
+      # demeStatus= deme status of the nodes
+      # alleleStatus = allele status of the nodes
+      Ne <- round(Ne);Ne[Ne==0]<-1 
+      coalescent <- list()
+      for (i in 1:nrow(states)){
+        coalescent[[i]] <- new("Node",nodeNo=i,descendantList=integer(),new("branchTransition",tipAge=0,ancestorAge=Inf,statusDemes=demeStatus[i],agesDemes=0,
+                                                                            statusAlleles=alleleStatus[i],agesAlleles=0))
+        names(coalescent)[i]=i
+      }
+      numberOfNodes <- length(coalescent)
+      coalescent= new("listOfNodes",coalescent)
+      Age=0
+      notCoalesced <- which(state(object = coalescent,age = 0,type = "ancestorAge")==Inf)
+      while(length(notCoalesced)>1){
+        Age=Age+1
+        nodesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneByDemeAndAllele")
+        nodesAndStatesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneAndDemeAndAllele")
+        for (States in names(nodesAndStatesThatCanCoalesce)){
+          # get get the Deme of the nodes that can coalesce in the list
+          currentDeme = nodesAndStatesThatCanCoalesce[[States]]$statusDemes[1]
+          currentAllele = nodesAndStatesThatCanCoalesce[[States]]$statusAlleles[1]
+          if (runif(1,0,1) < 1/(2*Ne[currentDeme,])){
+            numberOfNodes <- numberOfNodes+as.integer(1)
+            coalescent[[numberOfNodes]] <- new("Node",tipAge=Age,ancestorAge=Inf,
+                                               statusDemes=currentDeme,agesDemes=Age,
+                                               statusAlleles=currentAllele,agesAlleles=Age,
+                                               nodeNo=numberOfNodes,
+                                               descendantList=nodesThatCanCoalesce[[States]])
+            names(coalescent)[numberOfNodes] <- numberOfNodes
+            #lapply(coalescent ,function(x) modifyList(x,x[[x]]@ancestorAge=Age)
+          }
+        }
+        for (node in nodes)#node = nodes[1];node = nodes[2];node = nodes[3]# parent_cell_number_of_nodes
+        {
+          # migrations
+          parent_deme_status_of_nodes[node] = sample(demes,size=1,prob=c(transitionList$demes[as.character(deme_status_of_nodes[node]),]))
+          # mutations
+          parent_allele_status_of_nodes[node] = sample(alleles,size=1,prob=c(transitionList$alleles[as.character(allele_status_of_nodes[node]),]))
+        }
+        
+        
+        Node <- setClass("Node",
+                         contains="branchTransition",
+                         slots = c(nodeNo="integer",descendantList="list")
+        )
+        
+      }
+      }
+  )
