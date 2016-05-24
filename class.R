@@ -5,34 +5,40 @@ parameters <- setClass("parameters",
                        contains="list") # add validity (contains K, R and mutation_rate)
 
 
-demeTransition <- setClass("demeTransition",
-                              slots = c(populationsize="RasterLayer"),
-                              contains="matrix",
-                  #  prototype = prototype(matrix(c(0.1,0.3,0.9,0.7),nrow=2,ncol=2),populationsize=raster(matrix(c(20,10)))),
-                              validity = function(object){
-                      if(nrow(object)!=ncellA(object@populationsize))  {stop("error in dimentions")}
-                    }
+transitionModel <- setClass("transitionModel",
+                           slots = c(demicTransition="demeTransition",
+                                     allelicTransition="matrix",
+                                     Ne="numeric", 
+                                     demesNames="character", 
+                                     allelesNames="character", 
+                                     demicStatusOfStartingIndividuals="character", 
+                                     allelicStatusOfStartingIndividuals="character"),
+                           validity = function(object){
+                                if(length(object@demicStatusOfStartingIndividuals)!=length(object@allelicStatusOfStartingIndividuals))  {stop("length of demicStatusOfStartingIndividuals differs from length of allelicStatusOfStartingIndividuals")}
+                                if(length(object@Ne)!=length(object@demesNames))  {stop("length of Ne differs from length of demesnames")}
+                                if(length(object@Ne)!=nrow(object@demicTransition@transition))  {stop("length of Ne differs from number of rows and columns in demic transition matrix")}
+                                if(ncol(object@demicTransition@transition)!=nrow(object@demicTransition@transition))  {stop("demic transition matrix is not square")}
+                                if(length(object@allelesNames)!=nrow(object@allelicTransition))  {stop("length of allele names differs from nrow and ncols of demicTransition")}
+                              }
 ) 
 # nrow replace dim() because object is a matrix 
 
-transitionList <- setClass("transitionList",
-                              slots = c(alleleTransition="matrix"),
-                              contains="demeTransition",
-                              #  prototype = prototype(matrix(c(0.1,0.3,0.9,0.7),nrow=2,ncol=2),populationsize=raster(matrix(c(20,10)))),
-) 
-# nrow replace dim() because object is a matrix 
+
+demeTransition <- setClass("demeTransition",
+                           slots=c(transition="matrix"),
+                           contains="RasterLayer")
 
 setClassUnion("numericOrNULL", c("numeric", "NULL"))
 
 branchTransition <- setClass("branchTransition",
                              slots=c(tipAge="numeric",ancestorAge="numeric",
-                                     statusDemes="integer",agesDemes="numeric",
-                                     statusAlleles="integer",agesAlleles="numeric"))
+                                     statusDemes="character",agesDemes="numeric",
+                                     statusAlleles="character",agesAlleles="numeric"))
 
 
 Node <- setClass("Node",
                       contains="branchTransition",
-                      slots = c(nodeNo="integer",descendant="integer")
+                      slots = c(nodeNo="character",descendant="character")
                       )
 
 listOfNodes <- setClass("listOfNodes",
@@ -74,9 +80,9 @@ genetic <- setClass("genetic",
 
 
 spatialGenetic <- setClass("spatialGenetic",
-                           slots = c(x="numeric", y="numeric",Cell_numbers="numeric"),
+                           slots = c(x="numeric", y="numeric",Cell_numbers="integer"),
                            contains = "genetic",
-                           prototype = prototype(genetic(),x=c(1,2),y=c(1,1),Cell_numbers=c(1,2)),
+                           prototype = prototype(genetic(),x=c(1,2),y=c(1,1),Cell_numbers=as.integer(c(1,2))),
                            validity = function(object){
                              if (length(object@x)!=length(object@y)) stop("slots x and y do not have the same length")
                              if (length(object@x)!=nrow(object)) stop("slots x and genetic do not have the same number of individuals")

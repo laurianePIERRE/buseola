@@ -86,7 +86,7 @@ load("Prior.rda")
 
 # spatial genetic classes
 gen <- new("genetic",data.frame(Locus1=genotypes[,"locus1"]),ploidy=as.integer(1), ploidyByrow=FALSE)
-spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=genotypes[,"Cell_numbers"])
+spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbers=as.integer(genotypes[,"Cell_numbers"]))
 #popgg <- new("GenealPopGenet",genealogy,Genet=spgen,Pop=populations)
 
 
@@ -95,17 +95,25 @@ spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbe
 #
 Parameters <- sampleP(Prior)
 transition=transitionMatrixA(object1 = populations,object2 = Parameters)
+demeTrans <- new("demeTransition",populations,transition=transition)
 allelicTransition <- matrix(c(.7,0.3,0.3,0.7),nrow=2)
 dimnames(allelicTransition) <- list(c(120,122),c(120,122))
-transitionList=list(allelicTransition,transition)
-names(transitionList) <- c("alleles","demes")
+
+transitionMod=new("transitionModel",
+               demicTransition=demeTrans,
+               allelicTransition=allelicTransition,
+               Ne=valuesA(populations), 
+               demesNames=as.character(cellNumA(populations)),
+               allelesNames=c("120","122"),
+               demicStatusOfStartingIndividuals=as.character(spgen@Cell_numbers),
+               allelicStatusOfStartingIndividuals=as.character(spgen$Locus1))
+
 statesdf <- data.frame(nodeNo=1:5,alleles=c(122,122,120,120,122),demes=spgen@Cell_numbers,time=0)
 states <- statesdf[,c("alleles","demes")]
 alleles=rownames(transitionList$alleles)
 alleleStatus = as.integer(statesdf$alleles)
 demes=rownames(transitionList$demes)
 demeStatus=as.integer(statesdf$demes)
-
 Ne=valuesA(populations)
 
 
