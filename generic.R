@@ -90,4 +90,4 @@ setGeneric(name="sampleP",
            def=function(prior){return(standardGeneric("sampleP"))})
           
 setGeneric(name="simul_coalescent",
-           def=function(prior){return(standardGeneric("sampleP"))})
+           def=function(prior){return(standardGeneric("simul_coalescent"))})
