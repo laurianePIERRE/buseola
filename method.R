@@ -233,7 +233,7 @@ setMethod(
              states=state(object,age,"DemesAndAlleles")
              NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
              whichNBS<- which(lapply(NBS,nrow)>1)
-             lapply(whichNBS,function(x) row.names(NBS[[x]]))},
+             lapply(whichNBS,function(x) as.integer(row.names(NBS[[x]])))},
            notAloneAndDemeAndAllele = {
              states=state(object,age,"DemesAndAlleles")
              NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
@@ -248,10 +248,14 @@ setMethod(
              states=state(object,age,"Alleles")
              NBS=split(states,states)
              whichNBS<- which(lapply(NBS,length)>1)
-             lapply(whichNBS,function(x) as.integer(names(NBS[[x]])))}
-    )    
+             lapply(whichNBS,function(x) as.integer(names(NBS[[x]])))},
+           statesWhereCoalesce ={
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             whichNBS<- which(lapply(NBS,nrow)>1)
+             lapply(whichNBS,function(x) as.numeric(NBS[[x]][1,]))})
   }
-)
+  )    
 
 
 setMethod(
@@ -592,10 +596,10 @@ setMethod(
       coalescent <- list()
       for (i in 1:length(transitionMod@demicStatusOfStartingIndividuals)){
         coalescent[[i]] <- new("Node",nodeNo=i,descendant=integer(),new("branchTransition",tipAge=0,ancestorAge=Inf,
-                                                                            statusDemes=transitionMod@demicStatusOfStartingIndividuals[i],
-                                                                            agesDemes=0,
-                                                                            statusAlleles=transitionMod@allelicStatusOfStartingIndividuals[i],
-                                                                            agesAlleles=0))
+                                                                        statusDemes=transitionMod@demicStatusOfStartingIndividuals[i],
+                                                                        agesDemes=0,
+                                                                        statusAlleles=transitionMod@allelicStatusOfStartingIndividuals[i],
+                                                                        agesAlleles=0))
         names(coalescent)[i]=i
       }
       numberOfNodes <- length(coalescent)
@@ -608,14 +612,14 @@ setMethod(
         nodesAndStatesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneAndDemeAndAllele")
         for (States in names(nodesAndStatesThatCanCoalesce)){
           # get get the Deme of the nodes that can coalesce in the list
-          currentDeme = nodesAndStatesThatCanCoalesce[[States]]$statusDemes[1]
+          currentDeme = strsplit() nodesAndStatesThatCanCoalesce[[States]]$statusDemes[1]
           currentAllele = nodesAndStatesThatCanCoalesce[[States]]$statusAlleles[1]
           if (runif(1,0,1) < 1/(2*Ne[currentDeme])){
             numberOfNodes <- numberOfNodes+as.integer(1)
             coalescent[[numberOfNodes]] <- new("Node",tipAge=Age,ancestorAge=Inf,
                                                statusDemes=currentDeme,agesDemes=Age,
                                                statusAlleles=currentAllele,agesAlleles=Age,
-                                               nodeNo=as.character(numberOfNodes),
+                                               nodeNo=numberOfNodes,
                                                descendant=nodesThatCanCoalesce[[States]])
             names(coalescent)[numberOfNodes] <- numberOfNodes
             #lapply(coalescent ,function(x) modifyList(x,x[[x]]@ancestorAge=Age)

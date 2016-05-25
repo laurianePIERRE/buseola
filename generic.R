@@ -90,5 +90,5 @@ setGeneric(name="sampleP",
            def=function(prior){return(standardGeneric("sampleP"))})
           
 setGeneric(name="simul_coalescent",
-           def=function(transitionModel)
+           def=function(transitionMod)
              {return(standardGeneric("simul_coalescent"))})

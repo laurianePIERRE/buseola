@@ -38,7 +38,7 @@ branchTransition <- setClass("branchTransition",
 
 Node <- setClass("Node",
                       contains="branchTransition",
-                      slots = c(nodeNo="character",descendant="character")
+                      slots = c(nodeNo="integer",descendant="integer")
                       )
 
 listOfNodes <- setClass("listOfNodes",
