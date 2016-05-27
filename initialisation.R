@@ -39,7 +39,7 @@ prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
 
 
 
-wd="~/Documents/M1bi 2015 2016/stage/busseola/"
+wd="/M1bi 2015 2016/stage/busseola/"
 
 wd="~/Documents/Lauriane/busseola/"
 
@@ -141,7 +141,7 @@ geneaandgenet=new("LandGenetGenalogy",geneasimple,Genotype=spgen)
 genealogymod=change_genealogy(genealogy)
 
 
-# try to use phtools for colorate
+# try to use phtools for colorate but no my data
 # our data = ma (raster simplify dim (3,3,1))
 
 ## set seed for reproducibility
