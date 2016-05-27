@@ -24,8 +24,11 @@ setMethod(
   f = "valuesA",
   signature = "RasterLayer",
   definition = function(object){
-    x=data.frame(variable=na.omit(values(object)))
-    colnames(x)=names(object)
+    #x=data.frame(variable=na.omit(values(object)))
+    select <- !is.na(values(object))
+    x=values(object)[select]
+    names(x) <- which(select)
+    #colnames(x)=names(object)
   x
   }
   )
@@ -36,17 +39,18 @@ setMethod(
   definition = function(object){
     x=na.omit(values(object))
     colnames(x)=names(object)
+    rownames(x)=cellNumA(object)
     x
     }
 )
 
-
 setMethod(
   f = "valuesA",
-  signature = "Transition_Matrix",  
+  signature = "RasterStack",
   definition = function(object){
-    x=na.omit(values(object@populationsize))
-    colnames(x)=names(object)
+    x=na.omit(values(object))
+    colnames(x)=names(x)
+    rownames(x) <- cellNumA(object)
     x
   }
 )
@@ -55,21 +59,28 @@ setMethod(
   f = "xyFromCellA",
   signature = "RasterLayer",
   definition = function(object){
-    xyFromCell(object,cellNumA(object))
+    df=xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
   }
 )
+
 setMethod(
   f = "xyFromCellA",
   signature = "RasterStack",
   definition = function(object){
-    xyFromCell(object,cellNumA(object))
+    df =xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+    df
   }
 )
+
 setMethod(
   f = "xyFromCellA",
   signature = "RasterBrick",
   definition = function(object){
-    xyFromCell(object,cellNumA(object))
+    df=xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+    df
   }
 )
 
@@ -101,16 +112,6 @@ setMethod(
 
     
     
-setMethod(
-      f = "valuesA",
-      signature = "RasterStack",
-      definition = function(object){
-        x=na.omit(values(object))
-        colnames(x)=names(object)
-        x
-      }
-)
-
 # copier la fonction distanceMatrix  dans la method en  l'adaptant --> idem pour transitionMatrix        
 
 
@@ -120,20 +121,27 @@ setMethod(
   definition = function(object) {
       coords = xyFromCellA(object)
       distance = as.matrix(dist(coords)) 
+      dimnames(distance) <- list(which(!is.na(values(object))),which(!is.na(values(object))))
       distance
   }
 )
 
+setMethod(
+  f="transitionMatrixA",
+  signature=c("RasterLayer","prior"),
+  definition = function(object1,object2){
+    object2 <- sampleP(object2)
+    transitionMatrixA(object1,object2)
+  })
 
 setMethod(
   f="transitionMatrixA",
-  signature="RasterLayer",
-  definition = function(object,prior){
-  listeSample=sampleP(prior)
-  X=valuesA(object)
-  K = ReactNorm(X,listeSample$K$busseola$p,listeSample$K$busseola$model)[,"Y"]
-  r = ReactNorm(X,listeSample$R$busseola$p,listeSample$R$busseola$model)[,"Y"] 
-  migration <- migrationMatrixA(object,listeSample$dispersion$busseola$model, listeSample$dispersion$busseola$p)
+  signature=c("RasterLayer","parameters"),
+  definition = function(object1,object2){
+  X=valuesA(object1)
+  K = ReactNorm(X,object2$K[[names(object1)]]$p,object2$K[[names(object1)]]$model)[,"Y"]
+  r = ReactNorm(X,object2$R[[names(object1)]]$p,object2$R[[names(object1)]]$model)[,"Y"] 
+  migration <- migrationMatrixA(object1,object2$dispersion[[names(object1)]]$model, object2$dispersion[[names(object1)]]$p)
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -143,8 +151,189 @@ setMethod(
   transition = transition * as.numeric(transition>1e-6) # removal of values below 1e-6
   transition = transition / rowSums(transition)  # Standardisation again
   transition
-} 
+  } 
   )
+
+setMethod(
+  f="varnames",
+  signature="parameters",
+  definition=function(object){
+    names(object$K)
+  })
+
+setMethod(
+  f="varnames",
+  signature="prior",
+  definition=function(object){
+    names(object$K)
+  })
+
+setMethod(
+  f="sampleP",
+  signature="prior",
+  definition=function(prior) {
+  Result=list()
+  for(parametreBio in names(prior)) {
+    for (variableEnvironnemental in names(prior[[parametreBio]])) {
+      Result[[parametreBio]] <- list() 
+      Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution,
+                                                                    uniform=data.frame(variableEnvironnemental=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    fixed =data.frame(variableEnvironnemental=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                                                    normal=data.frame(variableEnvironnemental=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    loguniform=data.frame(variableEnvironnemental=log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))),
+                                                                    uniform=data.frame(variableEnvironnemental= runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    fixed =data.frame(variableEnvironnemental= prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+                                                                    normal=data.frame(variableEnvironnemental =rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+                                                                    loguniform=data.frame(variableEnvironnemental= log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
+      
+      Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
+      colnames(Result[[parametreBio]][[variableEnvironnemental]]$p)=variableEnvironnemental
+      rownames(Result[[parametreBio]][[variableEnvironnemental]]$p)=c("a")
+      names(Result[[parametreBio]][[variableEnvironnemental]]$model)=variableEnvironnemental
+      
+    }
+  }
+  #  names(Result) <- names(prior)
+  return(new("parameters",Result))
+}
+)
+
+setMethod(
+  f="nodes",
+  signature="listOfNodes",
+  definition=function(object){
+    unlist(lapply(object,function(sub) sub@nodeNo))
+  }
+)
+
+setMethod(
+  f="currentNodes",
+  signature=c("listOfNodes","numeric"),
+  definition=function(object,age){
+    which((sapply(object,function(object) object@ancestorAge)>=(age+1E-15))&(sapply(object,function(object) object@tipAge)<=age))
+  }
+)
+
+setMethod(
+  f="nodesByStates",
+  signature=c("listOfNodes","numeric","character"),
+  definition=function(object,age,Which){
+    switch(Which,
+           allByDemeAndAllele = {
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             lapply(NBS,function(x) as.numeric(row.names(x)))},
+           allByDeme = {
+             states=state(object,age,"Demes")
+             lapply(split(states,states),function(x) as.integer(names(x)))},
+           allAllele = {
+             states=state(object,age,"Alleles")
+             lapply(split(states,states),function(x) as.integer(names(x)))},
+           notAloneByDemeAndAllele = {
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             whichNBS<- which(lapply(NBS,nrow)>1)
+             lapply(whichNBS,function(x) as.integer(row.names(NBS[[x]])))},
+           notAloneAndDemeAndAllele = {
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             whichNBS<- which(lapply(NBS,nrow)>1)
+             lapply(whichNBS,function(x) NBS[[x]])},
+           notAloneByDeme = {
+             states=state(object,age,"Demes")
+             NBS=split(states,states)
+             whichNBS<- which(lapply(NBS,length)>1)
+             lapply(whichNBS,function(x) as.integer(names(NBS[[x]])))},
+           notAloneByAllele = {
+             states=state(object,age,"Alleles")
+             NBS=split(states,states)
+             whichNBS<- which(lapply(NBS,length)>1)
+             lapply(whichNBS,function(x) as.integer(names(NBS[[x]])))},
+           statesWhereCoalesce ={
+             states=state(object,age,"DemesAndAlleles")
+             NBS=split(states,paste(states$statusDemes,states$statusAlleles,sep="."))
+             whichNBS<- which(lapply(NBS,nrow)>1)
+             lapply(whichNBS,function(x) as.numeric(NBS[[x]][1,]))})
+  }
+  )    
+
+
+setMethod(
+  f="state",
+  signature=c("listOfNodes","numeric","character"),
+  definition=function(object,age,type){
+    Nodes = currentNodes(object,age)
+    switch(type,
+           DemesAndAlleles = data.frame(
+             statusDemes = unlist(lapply(Nodes,function(i) {
+               demes <- object[[i]]@statusDemes[(object[[i]]@agesDemes<=age)]
+               demes[length(demes)]})),
+             statusAlleles = unlist(lapply(Nodes,function(i) {
+               alleles <- object[[i]]@statusAlleles[(object[[i]]@agesAlleles<=age)]
+               alleles[length(alleles)]}))),
+           Demes = unlist(lapply(Nodes,function(i) {
+             demes <- object[[i]]@statusDemes[(object[[i]]@agesDemes<=age)]
+             demes[length(demes)]})),
+           Alleles = unlist(lapply(Nodes,function(i) {
+             alleles <- object[[i]]@statusAlleles[(object[[i]]@agesAlleles<=age)]
+             alleles[length(alleles)]})),
+           aparitionDemes = unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@agesDemes[(object[[i]]@agesDemes<=age)]
+             apparition[length(apparition)]})),
+           aparitionAlleles = unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@agesAlleles[(object[[i]]@agesAlleles<=age)]
+             apparition[length(apparition)]})),
+           tipAge =  unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@tipAge})),
+           ancestorAge =  unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@ancestorAge})))
+  }
+)
+
+
+setMethod("setState",
+          signature=c("listOfNodes","integer","character","list"),
+          definition=function(object,Nodes,attribut,newValues){
+            switch(attribut,
+                   ancestorAge={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@ancestorAge = newValues[[i]]}},
+                   tipAge={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@tipAge = newValues[[i]]}},
+                   statusDemes={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@statusDemes = append(object[[Nodes[i]]]@statusDemes,newValues[[i]])}},
+                   ageDemes={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@ageDemes = append(object[[Nodes[i]]]@ageDemes,newValues[[i]])}},
+                   statusAlleles={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@statusAlleles = append(object[[Nodes[i]]]@statusAlleles,newValues[[i]])}},
+                   ageAlleles={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@ageAlleles = append(object[[Nodes[i]]]@ageAlleles,newValues[[i]])}},
+                   nodeNo={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@nodeNo = newValues[[i]]
+                     names(object)[Nodes[i]] <- newValues[[i]]}},
+                   descendants={for (i in 1:length(Nodes)){
+                     object[[Nodes[i]]]@descendants = newValues[[i]]}})
+          object
+          }
+)
+            
+
+
+setMethod(
+  f="currentState",
+  signature=c("listOfNodes","character","integer"),
+  definition=function(object,type,nodes){
+    switch(type,
+           allStatus = data.frame(statusDemes = unlist(lapply(nodes,function(i) coalescent[[i]]@statusDemes[length(coalescent[[i]]@statusDemes)])),
+                                  statusAlleles = unlist(lapply(nodes,function(i) coalescent[[i]]@statusAlleles[length(coalescent[[i]]@statusAlleles)]))),
+           statusDemes = unlist(lapply(nodes,function(i) coalescent[[i]]@statusDemes[length(coalescent[[i]]@statusDemes)])),
+           statusAlleles = unlist(lapply(nodes,function(i) coalescent[[i]]@statusAlleles[length(coalescent[[i]]@statusAlleles)])),
+           agesDemes = unlist(lapply(nodes,function(i) coalescent[[i]]@agesDemes[length(coalescent[[i]]@agesDemes)])),
+           agesAlleles = unlist(lapply(nodes,function(i) coalescent[[i]]@agesAlleles[length(coalescent[[i]]@agesAlleles)])))
+  }
+)
+
+
+
 
 setMethod(
   f="migrationMatrixA",
@@ -266,10 +455,20 @@ setMethod(
   
   )
 
+setAs("demeTransition", "matrix",
+       function(from , to){
+       })
+
+
+setMethod(f="plot", 
+          signature="demeTransition",
+          definition = function(x, y , ...){
+            
+})
 
 setMethod(
   f="absorbingTransitionA",
-  signature="Transition_Matrix",
+  signature="demeTransition",
   definition = function(object){
     N=valuesA(object)
     N[N<1]=1
@@ -357,7 +556,7 @@ setMethod(
 
 setMethod(
   f="plotgenealogy",
-  signature="Genealogy",
+  signature="listOfNodes",
   definition = function(object,tipcols=NA)    {
     if(is.na(tipcols)) { tipcols=1}
     plot(coalescent_2_phylog(object),direction="downward",tip.color=tipcols)
@@ -378,3 +577,68 @@ setMethod(
     
   }
 )
+
+
+setMethod(
+  f="simul_coalescent",
+  signature="transitionModel",
+  definition = function(transitionMod)#transitionList,geneticData)
+    {
+      # transitionList =  list of transition matrix 
+      #                   sublist demes contains list of demic transitions
+      #                   sublist alleles contains list of allelic transitions for each allele
+      # Ne = a data.frame with number of individuals in each deme
+      # demes = all the possible deme status (attibutted cells in the raster lanscape of population sizes)
+      # alleles
+      # demeStatus= deme status of the nodes
+      # alleleStatus = allele status of the nodes
+      Ne <- round(transitionMod@Ne);Ne[Ne==0]<-1 
+      coalescent <- list()
+      for (i in 1:length(transitionMod@demicStatusOfStartingIndividuals)){
+        coalescent[[i]] <- new("Node",nodeNo=i,descendant=integer(),new("branchTransition",tipAge=0,ancestorAge=Inf,
+                                                                        statusDemes=transitionMod@demicStatusOfStartingIndividuals[i],
+                                                                        agesDemes=0,
+                                                                        statusAlleles=transitionMod@allelicStatusOfStartingIndividuals[i],
+                                                                        agesAlleles=0))
+        names(coalescent)[i]=i
+      }
+      numberOfNodes <- length(coalescent)
+      coalescent= new("listOfNodes",coalescent)
+      Age=0
+      notCoalesced <- which(state(object = coalescent,age = 0,type = "ancestorAge")==Inf)
+      while(length(notCoalesced)>1){
+        Age=Age+1
+        nodesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneByDemeAndAllele")
+        nodesAndStatesThatCanCoalesce <- nodesByStates(object = coalescent,age = Age, Which = "notAloneAndDemeAndAllele")
+        for (States in names(nodesAndStatesThatCanCoalesce)){
+          # get get the Deme of the nodes that can coalesce in the list
+          currentDeme = strsplit() nodesAndStatesThatCanCoalesce[[States]]$statusDemes[1]
+          currentAllele = nodesAndStatesThatCanCoalesce[[States]]$statusAlleles[1]
+          if (runif(1,0,1) < 1/(2*Ne[currentDeme])){
+            numberOfNodes <- numberOfNodes+as.integer(1)
+            coalescent[[numberOfNodes]] <- new("Node",tipAge=Age,ancestorAge=Inf,
+                                               statusDemes=currentDeme,agesDemes=Age,
+                                               statusAlleles=currentAllele,agesAlleles=Age,
+                                               nodeNo=numberOfNodes,
+                                               descendant=nodesThatCanCoalesce[[States]])
+            names(coalescent)[numberOfNodes] <- numberOfNodes
+            #lapply(coalescent ,function(x) modifyList(x,x[[x]]@ancestorAge=Age)
+          }
+        }
+        for (node in nodes)#node = nodes[1];node = nodes[2];node = nodes[3]# parent_cell_number_of_nodes
+        {
+          # migrations
+          parent_deme_status_of_nodes[node] = sample(demes,size=1,prob=c(transitionList$demes[as.character(deme_status_of_nodes[node]),]))
+          # mutations
+          parent_allele_status_of_nodes[node] = sample(alleles,size=1,prob=c(transitionList$alleles[as.character(allele_status_of_nodes[node]),]))
+        }
+        
+        
+        Node <- setClass("Node",
+                         contains="branchTransition",
+                         slots = c(nodeNo="integer",descendantList="list")
+        )
+        
+      }
+      }
+  )

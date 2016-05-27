@@ -6,6 +6,25 @@ setGeneric(
   name = "valuesA",
   def = function(object) { return(standardGeneric("valuesA"))})
 
+setGeneric(
+  name="nodes",
+  def= function(object) { return(standardGeneric("nodes"))})
+
+setGeneric(
+  name="state",
+  def=function(object,age,type,...) { return(standardGeneric("state"))})
+
+setGeneric(
+  name="currentState",
+  def= function(object,type,nodes) { return(standardGeneric("currentState"))})
+
+setGeneric(
+  name="currentNodes",
+  def= function(object,age) { return(standardGeneric("currentNodes"))})
+
+setGeneric(
+  name="varnames",
+  def=function(object){return(standardgeneric("varnames"))})
 
 setGeneric(
   name = "cellNumA",
@@ -19,14 +38,14 @@ setGeneric(
 setGeneric(
   name="distA",
   def=function(object)
-               { return(standardGeneric("distA"))
-    }
+  { return(standardGeneric("distA"))
+  }
 )
 
 setGeneric( 
   name="distanceMatrixA",
   def = function(object) { return(standardGeneric("distanceMatrixA"))}
-  )
+)
 
 setGeneric(
   name="migrationMatrixA",
@@ -35,7 +54,7 @@ setGeneric(
 
 setGeneric(
   name="transitionMatrixA",
-  def= function(object,prior)  { return(standardGeneric("transitionMatrixA"))}
+  def= function(object1,object2)  { return(standardGeneric("transitionMatrixA"))}
 )
 
 setGeneric(
@@ -57,3 +76,19 @@ setGeneric(
   name = "plotLandG",
   def=function(object,rasK) {return(standardGeneric("plotLandG"))}
 )
+
+setGeneric(
+   name="nodesByStates",
+   def=function(object,age,Which) {return(standardGeneric("nodesByStates"))}
+ )
+
+setGeneric(name="setState",
+           def=function(object,Nodes,attribut,newValues){return(standardGeneric("setState"))}
+)
+
+setGeneric(name="sampleP",
+           def=function(prior){return(standardGeneric("sampleP"))})
+          
+setGeneric(name="simul_coalescent",
+           def=function(transitionMod)
+             {return(standardGeneric("simul_coalescent"))})
