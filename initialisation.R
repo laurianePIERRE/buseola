@@ -6,7 +6,7 @@
 
 
 
-wd="~/Documents/M1bi 2015 2016/stage/busseola/"
+wd="/M1bi 2015 2016/stage/busseola/"
 
 wd="~/Documents/Lauriane/busseola/"
 
@@ -298,7 +298,7 @@ geneaandgenet=new("LandGenetGenalogy",geneasimple,Genotype=spgen)
 genealogymod=change_genealogy(genealogy)
 
 
-# try to use phtools for colorate
+# try to use phtools for colorate but no my data
 # our data = ma (raster simplify dim (3,3,1))
 
 ## set seed for reproducibility
