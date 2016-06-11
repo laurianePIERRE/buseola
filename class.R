@@ -1,12 +1,17 @@
+
 prior <- setClass("prior",
                   contains="list") # add validity (contains K, R and mutation_rate)
 
 parameters <- setClass("parameters",
                        contains="list") # add validity (contains K, R and mutation_rate)
 
+allelicTransition <- setClass("allelicTransition",
+                              contains="list",
+                              validity=function(x){
+                                if(!lapply(x,"class")=="matrix") stop("allelicTransition is expected to be a list of matrix")})
 
 transitionModel <- setClass("transitionModel",
-                           slots = c(demicTransition="demeTransition",
+                           slots = c(demicTransition="matrix",
                                      allelicTransition="matrix",
                                      Ne="numeric", 
                                      demesNames="character", 
@@ -16,11 +21,13 @@ transitionModel <- setClass("transitionModel",
                            validity = function(object){
                                 if(length(object@demicStatusOfStartingIndividuals)!=length(object@allelicStatusOfStartingIndividuals))  {stop("length of demicStatusOfStartingIndividuals differs from length of allelicStatusOfStartingIndividuals")}
                                 if(length(object@Ne)!=length(object@demesNames))  {stop("length of Ne differs from length of demesnames")}
-                                if(length(object@Ne)!=nrow(object@demicTransition@transition))  {stop("length of Ne differs from number of rows and columns in demic transition matrix")}
-                                if(ncol(object@demicTransition@transition)!=nrow(object@demicTransition@transition))  {stop("demic transition matrix is not square")}
+                                if(length(object@Ne)!=nrow(object@demicTransition))  {stop("length of Ne differs from number of rows and columns in demic transition matrix")}
+                                if(ncol(object@demicTransition)!=nrow(object@demicTransition))  {stop("demic transition matrix is not square")}
                                 if(length(object@allelesNames)!=nrow(object@allelicTransition))  {stop("length of allele names differs from nrow and ncols of demicTransition")}
+                                if(any(names(object@Ne)!=colnames(object@demicTransition))) {stop("names of slot Ne differs from colnames of slot demictransition")}
                               }
 ) 
+
 # nrow replace dim() because object is a matrix 
 
 
@@ -31,14 +38,14 @@ demeTransition <- setClass("demeTransition",
 setClassUnion("numericOrNULL", c("numeric", "NULL"))
 
 branchTransition <- setClass("branchTransition",
-                             slots=c(tipAge="numeric",ancestorAge="numeric",
+                             slots=c(age="numeric",ancestorAge="numeric",
                                      statusDemes="character",agesDemes="numeric",
                                      statusAlleles="character",agesAlleles="numeric"))
 
 
 Node <- setClass("Node",
                       contains="branchTransition",
-                      slots = c(nodeNo="integer",descendant="integer")
+                      slots = c(nodeNo="integer",descendant="integer",ancestor="integer")
                       )
 
 listOfNodes <- setClass("listOfNodes",
@@ -47,6 +54,15 @@ listOfNodes <- setClass("listOfNodes",
                         if (all(lapply(object,"class")=="Node")) TRUE else FALSE
                       }
                       )
+graphicalNode <- setClass("graphicalNode", contains="Node",
+                                 slots=c(x="numeric",y="numeric")
+                                 )
+
+graphicalListOfNodes <- setClass("graphicalListOfNodes", contains="list",
+                                 validity = function(object){
+                                   if (all(lapply(object,"class")=="graphicalNode")) TRUE else FALSE
+                                 }
+)
 
 spatialListOfNodes <- setClass("spatialListOfNodes",
                         contains ="listOfNodes",

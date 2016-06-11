@@ -16,6 +16,7 @@ wd="~/Documents/Lauriane/busseola/"
 setwd(wd)
 library(raster)
 library(rgdal) # necessary to use function raster()
+library(stringr)
 source("class.R")
 source("generic.R");source("method.R")
 source("Laurianne.R")
@@ -57,12 +58,14 @@ Prior$mutation_rate$busseola$model =c("stepwise")
 Prior$mutation_rate$busseola$a$distribution = "loguniform"
 Prior$mutation_rate$busseola$a$p =data.frame(busseola=c(min=1E-6,max=1E-2))
 Prior$dispersion$busseola$model=c("contiguous")
-Prior$dispersion$busseola$a$distribution="uniform"
+Prior$dispersion$busseola$a$distribution="loguniform"
 Prior$dispersion$busseola$a$p=data.frame(busseola=c(min=0.001,max=0.5))
 Prior<-new("prior",Prior)
 save(Prior,file="Prior.rda")
 
 populations <- raster(matrix(c(20,30,40,10,NA,NA,20,30,40),nrow=3),xmn=0,xmx=3,ymn=0,ymx=3)
+populations <- raster(matrix(c(8,4,2,4,8),ncol=5),xmn=0,xmx=5,ymn=0,ymx=1)
+populations <- raster(matrix(c(4,8,3,NA,4,8),ncol=3,nrow=2),xmn=0,xmx=3,ymn=0,ymx=2)
 plot(populations,main=names(populations))
 names(populations)<-"busseola"
 save(populations,file= "populations.rda")
@@ -77,10 +80,23 @@ load("genealogy.rda")
 
 # donnes genetique pour le mini jeu de donnees genotypes
 load("genotypes.rda")
+#genotypes<-data.frame(Cell_numbers=as.integer(c(4,7,7,9,6)),x=c(.5,.5,.5,2.5,2.5),y=c(1.5,.5,.5,.5,1.5),locus1=as.integer(c(122,122,122,120,120)))
+#genotypes<-data.frame(Cell_numbers=as.integer(c(1,4,4,3,6)),x=c(.5,.5,.5,2.5,2.5),y=c(1.5,.5,.5,1.5,.5),locus1=as.integer(c(122,122,122,120,120)))
+#save(genotypes,file="genotypes.rda")
+#genotypes<-data.frame(Cell_numbers=as.integer(c(1,2,3,3,3)),x=c(.5,1.5,.5,.5,.5),y=c(1.5,1.5,.5,.5,.5),locus1=as.integer(c(122,122,120,120,120)))
 
 # population data
 load("populations.rda")
-
+#populations <- raster(matrix(c(4,8,3,NA,4,8),ncol=3,nrow=2),xmn=0,xmx=3,ymn=0,ymx=2)
+#populations <- raster(matrix(c(4,8,12,2,NA,NA,4,6,8),ncol=3,nrow=3),xmn=0,xmx=3,ymn=0,ymx=3)
+#names(populations)<-"busseola"
+#save(populations,file="populations.rda")
+#populations <- raster(matrix(c(4,8,3,NA),ncol=2,nrow=2),xmn=0,xmx=2,ymn=0,ymx=2)
+#populations <- raster(matrix(c(4,8,3,NA),ncol=2,nrow=2),xmn=0,xmx=2,ymn=0,ymx=2)
+plot(populations)
+alleles <- raster(matrix(1,ncol=2,nrow=1),xmn=0,xmx=2,ymn=0,ymx=1)
+#save(alleles,file="alleles.rda")
+#load("alleles.rda")
 # prior data
 load("Prior.rda")
 
@@ -95,26 +111,95 @@ spgen <- new("spatialGenetic",gen,x=genotypes[,"x"],y=genotypes[,"y"],Cell_numbe
 #
 Parameters <- sampleP(Prior)
 transition=transitionMatrixA(object1 = populations,object2 = Parameters)
-demeTrans <- new("demeTransition",populations,transition=transition)
-allelicTransition <- matrix(c(.7,0.3,0.3,0.7),nrow=2)
+#demeTrans <- new("demeTransition",populations,transition=transition)
+allelicTransition <- matrix(c(1-mutRate,mutRate,mutRate,1-mutRate),nrow=2)
 dimnames(allelicTransition) <- list(c(120,122),c(120,122))
 
-transitionMod=new("transitionModel",
-               demicTransition=demeTrans,
-               allelicTransition=allelicTransition,
-               Ne=valuesA(populations), 
-               demesNames=as.character(cellNumA(populations)),
-               allelesNames=c("120","122"),
-               demicStatusOfStartingIndividuals=as.character(spgen@Cell_numbers),
-               allelicStatusOfStartingIndividuals=as.character(spgen$Locus1))
+transitionMod=transitionModel(demicTransition =transitionMatrixA(object1 = populations,object2 = Parameters),
+                              allelicTransition = transitionMatrixA(object1 = alleles,object2 = Parameters,option="allele"),
+                              demeNames = names(valuesA(populations)),
+                              alleleNames = c("120","122"),
+                              alleleTips = genotypes$locus1,
+                              demeTips = genotypes$Cell_numbers,
+                              Ne = populations)
 
+coalescent=simul_coalescent(transitionMod)
+myPlot(coalescent,transitionMod)
 statesdf <- data.frame(nodeNo=1:5,alleles=c(122,122,120,120,122),demes=spgen@Cell_numbers,time=0)
 states <- statesdf[,c("alleles","demes")]
-alleles=rownames(transitionList$alleles)
+alleles=transitionMod@allelesNames
+names(alleles)<-1:length(alleles)
 alleleStatus = as.integer(statesdf$alleles)
-demes=rownames(transitionList$demes)
+demes=rownames(transitionMod@demesNames)
 demeStatus=as.integer(statesdf$demes)
 Ne=valuesA(populations)
+
+
+a=list()
+a[[1]]=  new("graphicalNode",
+      age=0,
+      ancestorAge=5,
+      statusDemes=as.character(1,4),
+      agesDemes=c(0,4),
+      statusAlleles=as.character(122),
+      agesAlleles=c(0),
+      nodeNo=as.integer(1),
+      descendant=integer(0),
+      ancestor=as.integer(4),
+      x=0,
+      y=0
+      )
+a[[2]]=  new("graphicalNode",
+      age=0,
+      ancestorAge=5,
+      statusDemes=as.character(4),
+      agesDemes=c(0),
+      statusAlleles=as.character(122),
+      agesAlleles=c(0),
+      nodeNo=as.integer(2),
+      descendant=integer(0),
+      ancestor=as.integer(4),
+      x=.5,
+      y=0)
+a[[3]]=  new("graphicalNode",
+      nodeNo=as.integer(3),
+      age=0,
+      ancestorAge=140,
+      statusDemes=as.character(as.integer(c(6,3,2,1,4))),
+      agesDemes=c(0,10,135,136,140),
+      statusAlleles=as.character(as.integer(c(120,122))),
+      agesAlleles=c(0,112),
+      descendant=integer(0),
+      ancestor=as.integer(5),
+      x=1,
+      y=0)
+a[[4]]=  new("graphicalNode",
+      nodeNo=as.integer(4),
+      age=5,
+      ancestorAge=140,
+      statusDemes=as.character(4),
+      agesDemes=5,
+      statusAlleles=as.character(122),
+      agesAlleles=c(5),
+      descendant=as.integer(c(1,2)),
+      ancestor=as.integer(5),
+      x=.25,
+      y=5/140)
+a[[5]]=  new("graphicalNode",
+      age=140,
+      ancestorAge=Inf,
+      statusDemes=as.character(4),
+      agesDemes=5,
+      statusAlleles=as.character(122),
+      agesAlleles=c(5),
+      nodeNo=as.integer(4),
+      descendant=as.integer(c(3,4)),
+      ancestor=as.integer(),
+      x=(.25+1)/2,
+      y=1
+      )
+names(a)<- 1:5
+Coalescent <- new("graphicalListOfNodes",a)
 
 
 # 

@@ -12,7 +12,7 @@ setGeneric(
 
 setGeneric(
   name="state",
-  def=function(object,age,type,...) { return(standardGeneric("state"))})
+  def=function(object,age,type) { return(standardGeneric("state"))})
 
 setGeneric(
   name="currentState",
@@ -54,12 +54,7 @@ setGeneric(
 
 setGeneric(
   name="transitionMatrixA",
-  def= function(object1,object2)  { return(standardGeneric("transitionMatrixA"))}
-)
-
-setGeneric(
-  name="absorbingTransitionA",
-  def= function(object,...)  { return(standardGeneric("absorbingTransitionA"))}
+  def= function(object1,object2,...)  { return(standardGeneric("transitionMatrixA"))}
 )
 
 setGeneric(
@@ -90,5 +85,32 @@ setGeneric(name="sampleP",
            def=function(prior){return(standardGeneric("sampleP"))})
           
 setGeneric(name="simul_coalescent",
-           def=function(transitionMod)
+           def=function(transitionMod,...)
              {return(standardGeneric("simul_coalescent"))})
+
+setGeneric(name="myPlot",
+           def=function(coalescent,transitionMod){return(standardGeneric("myPlot"))})
+
+setGeneric(name="tipsInOrder",
+           def=function(tree){return(standardGeneric("tipsInOrder"))})
+
+setGeneric(name="modifyBranch",
+          def=function(coalescent,transitionMod){return("modifyBranch")})
+
+setGeneric(name="coalescent_2_newick",
+           def=function(coalescent){return("coalescent_2_newick")})
+
+setGeneric(name="coalescent_2_phylog",
+           def=function(coalescent){return("coalescent_2_phylog")})
+
+setGeneric(name="laplaceMatrix",
+           def=function(transitionMod){return("laplaceMatrix")})
+
+setGeneric(name="ordinary_laplacian",
+           def=function(transitionMod){return("ordinary_laplacian")})
+
+setGeneric(name="commute_time_undigraph",
+           def=function(transitionMod){return("commute_time_undigraph")})
+
+
+           
