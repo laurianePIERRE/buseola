@@ -163,12 +163,12 @@ setMethod(
 setMethod(
   f="transitionMatrixA",
   signature=c("RasterLayer","parameters"),
-  definition = function(object1,object2,option="demes"){
-    if(option=="demes"){
+  definition = function(object1,object2,Option="demes"){
+    if(Option=="demes"){
       X=valuesA(object1)
       K = ReactNorm(X,object2$K[[names(object1)]]$p,object2$K[[names(object1)]]$model)[,"Y"]
       r = ReactNorm(X,object2$R[[names(object1)]]$p,object2$R[[names(object1)]]$model)[,"Y"] 
-      migration <- migrationMatrixA(object1,object2$dispersion[[names(object1)]]$model, object2$dispersion[[names(object1)]]$p)
+      migration <- migrationMatrixA(object1,object2$dispersion[[names(object1)]]$model, object2$dispersion[[names(object1)]]$p[[1]])
       if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
       if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
       if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -178,10 +178,11 @@ setMethod(
       transition = transition * as.numeric(transition>1e-6) # removal of values below 1e-6
       transition = transition / rowSums(transition)  # Standardisation again
       transition
-    } else {if (option=="allele"){
-      transition = migrationMatrixA(object1,object2$mutation_rate[[names(object1)]]$model, object2$mutation_rate[[names(object1)]]$p)
+    } else {
+      transition = migrationMatrixA(object1,object2$mutation_rate[[names(object1)]]$model[Option], object2$mutation_rate[[names(object1)]]$p[[Option]])
+      names(transition)
       transition
-    }}
+    }
   } 
   )
 
@@ -202,26 +203,35 @@ setMethod(
 setMethod(
   f="sampleP",
   signature="prior",
-  definition=function(prior) {
+  definition=function(Prior) {
   Result=list()
-  for(parametreBio in names(prior)) {
-    for (variableEnvironnemental in names(prior[[parametreBio]])) {
+  for(parametreBio in names(Prior)) {
+    for (variableEnvironnemental in names(Prior[[parametreBio]])) {
       Result[[parametreBio]] <- list() 
-      Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(prior[[parametreBio]][[variableEnvironnemental]]$a$distribution,
-                                                                    uniform=data.frame(variableEnvironnemental=runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
-                                                                    fixed =data.frame(variableEnvironnemental=prior[[parametreBio]][[variableEnvironnemental]]$a$p),
-                                                                    normal=data.frame(variableEnvironnemental=rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
-                                                                    loguniform=data.frame(variableEnvironnemental=exp(runif(1,min=log(prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1]),max=log(prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])))),
-                                                                    uniform=data.frame(variableEnvironnemental= runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
-                                                                    fixed =data.frame(variableEnvironnemental= prior[[parametreBio]][[variableEnvironnemental]]$a$p),
-                                                                    normal=data.frame(variableEnvironnemental =rnorm(1,mean=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
-                                                                    loguniform=data.frame(variableEnvironnemental= log(runif(1,min=prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1]))))
-      
-      Result[[parametreBio]][[variableEnvironnemental]]$model <-  prior[[parametreBio]][[variableEnvironnemental]]$model
-      colnames(Result[[parametreBio]][[variableEnvironnemental]]$p)=variableEnvironnemental
-      rownames(Result[[parametreBio]][[variableEnvironnemental]]$p)=c("a")
-      names(Result[[parametreBio]][[variableEnvironnemental]]$model)=variableEnvironnemental
-      
+      Result[[parametreBio]][[variableEnvironnemental]]$p <- switch(Prior[[parametreBio]][[variableEnvironnemental]]$a$distribution,
+               uniform=data.frame(variableEnvironnemental=runif(1,min=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+               fixed =data.frame(variableEnvironnemental=Prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+               normal=data.frame(variableEnvironnemental=rnorm(1,mean=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+               loguniform={
+                 out=list()
+                 for (locus in names(Prior[[parametreBio]][[variableEnvironnemental]]$a$p)){
+                   out[[locus]] <- exp(runif(1,
+                                             min=log(Prior[[parametreBio]][[variableEnvironnemental]]$a$p[[locus]]["min"]),
+                                             max=log(Prior[[parametreBio]][[variableEnvironnemental]]$a$p[[locus]]["max"])))
+                   }  
+                 out},
+               uniform=data.frame(variableEnvironnemental= runif(1,min=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+               fixed =data.frame(variableEnvironnemental= Prior[[parametreBio]][[variableEnvironnemental]]$a$p),
+               normal=data.frame(variableEnvironnemental =rnorm(1,mean=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],sd=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])),
+               loguniform=data.frame(variableEnvironnemental= log(runif(1,min=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[1,1],max=Prior[[parametreBio]][[variableEnvironnemental]]$a$p[2,1])))
+               )
+      Result[[parametreBio]][[variableEnvironnemental]]$model <-  Prior[[parametreBio]][[variableEnvironnemental]]$model
+      names(Result[[parametreBio]][[variableEnvironnemental]]$model)=names(Result[[parametreBio]][[variableEnvironnemental]]$p )
+      if(class(Result[[parametreBio]][[variableEnvironnemental]]$p)=="data.frame") 
+      {colnames(Result[[parametreBio]][[variableEnvironnemental]]$p)=variableEnvironnemental
+       rownames(Result[[parametreBio]][[variableEnvironnemental]]$p)=c("a")
+       names(Result[[parametreBio]][[variableEnvironnemental]]$model)=variableEnvironnemental
+      }
     }
   }
   #  names(Result) <- names(prior)
@@ -338,6 +348,30 @@ setMethod(
   }
 )
 
+setMethod(
+  f="state",
+  signature=c("listofnodEs","numeric","character"),
+  definition=function(object,age=numeric(),type){
+    if (length(age)==0) Nodes = names(coalescent) else Nodes = currentNodes(object,age)
+    switch(type,
+           age =  {tmp=unlist(lapply(Nodes,function(i){
+             apparition <- object[[i]]@age}))
+             names(tmp)<-Nodes
+             tmp},
+           ancestor =  {tmp= unlist(lapply(Nodes,function(i){
+             tmp <- object[[i]]@ancestor}))
+             names(tmp)=Nodes
+             tmp},
+           descendants =  {tmp= unlist(lapply(Nodes,function(i){
+             tmp <- object[[i]]@descendants}))
+             names(tmp)=Nodes
+             tmp},
+           nodeNo =  {tmp=unlist(lapply(Nodes,function(i){
+             object[[i]]@nodeNo}))
+             names(tmp)=Nodes
+             tmp})
+  }
+)
 
 
 setMethod("setState",
@@ -393,24 +427,24 @@ setMethod(
       migration = apply(distMat, c(1,2), 
                         function(x)(switch(shapeDisp,
                                            # 1: alphaDisp   2: betaDisp ; note: esperance = 1/alphaDisp
-                                           fat_tail1 = 1/(1+x^pDisp[,2]/pDisp[,1]), # Molainen et al 2004
+                                           fat_tail1 = 1/(1+x^pDisp[2]/pDisp[1]), # Molainen et al 2004
                                            # 1: sigmaDisp
-                                           gaussian = (dnorm(x, mean = 0, sd = pDisp[,1], log = FALSE)),
+                                           gaussian = (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE)),
                                            # 1: sigma Disp
-                                           exponential = (dexp(x, rate = 1/pDisp[,1], log = FALSE)),
+                                           exponential = (dexp(x, rate = 1/pDisp[1], log = FALSE)),
                                            # 1: sigmaDisp
-                                           contiguous = (x==0)*(1-pDisp[,1])+((x>0)-(x>1.4*res(object)[1]))*(pDisp[,1]/(2*Ndim)),
+                                           contiguous = (x==0)*(1-pDisp[1])+((x>0)-(x>1.4*res(object)[1]))*(pDisp[[1]]/(2*Ndim)),
                                            # 1: sigmaDisp
-                                           stepwise = (x==0)*(1-pDisp[1,1])+((x>0)-(x>1.4*res(object)[1]))*(pDisp[1,1]/(Ndim)),
+                                           stepwise = (x==0)*(1-pDisp[1])+((x>0)-(x>1.4*res(object)[1]))*(pDisp[1]/(Ndim)),
                                            # 1: sigmaDisp
-                                           contiguous8 = (x==0)*(1-pDisp[,1])+((x>0)-(x>2*res(object)[1]))*(pDisp[,1]/(4*Ndim)),
+                                           contiguous8 = (x==0)*(1-pDisp[[1]])+((x>0)-(x>2*res(object)[1]))*(pDisp[[1]]/(4*Ndim)),
                                            #island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]/(nCell-1)),
-                                           island = (x==0)*(1-pDisp[,1])+(x>0)*(pDisp[,1]),
+                                           island = (x==0)*(1-pDisp[[1]])+(x>0)*(pDisp[[1]]),
                                            #1: sigmaDisp    2: gammaDisp
-                                           fat_tail2 = x^pDisp[,2]*exp(-2*x/(pDisp[,1]^0.5)),
+                                           fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[[1]]^0.5)),
                                            #1: sigmaDisp, 2: 
                                            contiguous_long_dist_mixt = pDisp["plongdist"]/ncellA(object)+(x==0)*(1-pDisp["pcontiguous"]-pDisp["plongdist"])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp["pcontiguous"]/2),
-                                         gaussian_long_dist_mixt = pDisp[,2]/ncellA(object) + (dnorm(x, mean = 0, sd = pDisp[,1], log = FALSE))
+                                         gaussian_long_dist_mixt = pDisp[2]/ncellA(object) + (dnorm(x, mean = 0, sd = pdisp[1], log = FALSE))
                         )))
       migration
     }
@@ -660,9 +694,9 @@ setMethod(
 setMethod(
   f="simul_coalescent",
   signature="transitionModel",
-  definition = function(transitionMod,option="allSimul")#transitionList,geneticData)
+  definition = function(transitionMod,Option="allSimul")#transitionList,geneticData)
   {
-    if (option=="demeSimul"){
+    if (Option=="demeSimul"){
       Ne <- round(transitionMod@Ne);Ne[Ne==0]<-1 
       coalescent <- list()
       for (i in 1:length(transitionMod@demicStatusOfStartingIndividuals)){
@@ -754,7 +788,7 @@ setMethod(
       }
       coalescent
     }
-    if (option=="allSimul"){
+    if (Option=="allSimul"){
       # transitionList =  list of transition matrix 
       #                   sublist demes contains list of demic transitions
       #                   sublist alleles contains list of allelic transitions for each allele
@@ -945,6 +979,25 @@ setMethod ("coalescent_2_newick",
            }
 )
 
+setMethod ("coalescent_2_newick",
+           signature="listofnodEs",
+           definition = function(coalescent){
+             tree=paste(" ",coalescent[[length(coalescent)]]@nodeNo," ",sep="")
+             ageNodes <- state(coalescent,numeric(),"age")
+             ageInternalNodes <- ageNodes[ageNodes>0]
+             internalNodesFromOldestToYoungest <- rev(names(ageInternalNodes[order(ageInternalNodes)]))
+             for (i in internalNodesFromOldestToYoungest)
+             {
+               Time = coalescent[[i]]@age
+               coalesc <- as.character(coalescent[[i]]@descendant)
+               br_length <-  unlist(lapply(as.character(coalescent[[i]]@descendant),function(node){coalescent[[i]]@age-coalescent[[node]]@age}))
+               tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]@nodeNo)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",br_length,collapse=" ,",sep=""),") ",sep=""))
+             }
+             tree <- gsub(" ","",paste(tree,";",sep=""))
+             tree
+           }
+)
+
 setMethod ("coalescent_2_phylog",
            signature="listOfNodes",
            definition = function(coalescent){
@@ -1014,28 +1067,30 @@ if (!is.na(actualCoalescent)){
   coalescent[[coalescent[[node]]@ancestor]]@descendants[which(coalescent[[coalescent[[node]]@ancestor]]@descendants==actualCoalescent)]=node
   
   }})
-                                      
-transitionModel <- function(demicTransition,allelicTransition,demeNames,alleleNames,alleleTips,demeTips,Ne){
+
+transitionModel <- function(demicTransition,allelicTransitionList,demeNames,alleleNamesList,alleleTipsDataFrame,demeTips,Ne){
   if(class(Ne)=="RasterLayer") Ne <- round(valuesA(Ne))
   Ne[Ne==0] <- 1
   if (dim(demicTransition)[1]!=dim(demicTransition)[2]) stop("demicTransition not square")
-  if (dim(allelicTransition)[1]!=dim(allelicTransition)[2]) stop("allelicTransition not square")
-  if (length(alleleNames)!=dim(allelicTransition)[1]) stop("length of alleleNames differs from dimention of allelic transition matrix")
+  for (locus  in names(alleleNamesList)) {
+    if (dim(allelicTransitionList[[locus]]))[1]!=dim(allelicTransitionList[[locus]]))[2]) stop(paste("locus", locus,"allelicTransition not square"))
+    if (is.null(colnames(allelicTransitionList[[locus]])))) colnames(allelicTransitionList[[locus]]))=alleleNamesList[[locus]]
+    if (is.null(rownames(allelicTransitionList[[locus]])))) rownames(allelicTransitionList[[locus]]))=alleleNamesList[[locus]]
+    if (length(alleleNamesList[[locus]])!=dim(allelicTransitionList[[locus]]))[1]) stop(paste("locus", locus,"length of alleleNames differs from dimention of allelic transition matrix"))
+    if (as.integer(colnames(allelicTransitionList[[locus]])))==1:length(alleleNames)) colnames(allelicTransitionList[[locus]]))=alleleNames
+    if (as.integer(rownames(allelicTransitionList[[locus]])))==1:length(alleleNames)) rownames(allelicTransitionList[[locus]]))=alleleNames
+    if (class(alleleTipsList[[locus]])=="integer") alleleTipsList[[locus]]=as.character(alleleTipsList[[locus]])
+    if (!all((alleleTipsList[[locus]]%in%alleleNamesList[[locus]]))) stop("alleleTips are not included in alleleNames")
+  }
   if (length(demeNames)!=dim(demicTransition)[1]) stop("length of demeNames differs from dimention of demic transition matrix")
-  if (is.null(colnames(allelicTransition))) colnames(allelicTransition)=alleleNames
-  if (is.null(rownames(allelicTransition))) rownames(allelicTransition)=alleleNames
   if (is.null(colnames(demicTransition))) colnames(demicTransition)=demeNames
   if (is.null(rownames(demicTransition))) rownames(demicTransition)=demeNames
-  if (as.integer(colnames(allelicTransition))==1:length(alleleNames)) colnames(allelicTransition)=alleleNames
-  if (as.integer(rownames(allelicTransition))==1:length(alleleNames)) rownames(allelicTransition)=alleleNames
   if (as.integer(colnames(demicTransition))==1:length(demeNames)) colnames(demicTransition)=demeNames
   if (as.integer(rownames(demicTransition))==1:length(demeNames)) rownames(demicTransition)=demeNames
   if (is.null(names(Ne))) names(Ne)<-demeNames
   if (length(demeTips)!=length(alleleTips)) stop("number of tips differs between alleleTips and demetips")
   if (class(demeTips)=="integer") demeTips=as.character(demeTips)
   if (!all((demeTips%in%demeNames))) stop("demeTips are not included in demeNames")
-  if (class(alleleTips)=="integer") alleleTips=as.character(alleleTips)
-  if (!all((alleleTips%in%alleleNames))) stop("alleleTips are not included in alleleNames")
   new("transitionModel",
       demicTransition=demicTransition,
       allelicTransition=allelicTransition,
@@ -1152,13 +1207,23 @@ setMethod(f = "$", signature = "transitionModel",
           }
 )
 
+setMethod(f = "[", signature = c("model","character"),
+          definition = function(x,i) {
+            slot(x,i)
+          }
+)
+
 setMethod(f = "[", signature = c("transitionModel","character"),
           definition = function(x,i) {
             slot(x,i)
           }
 )
 
-
+setMethod(f = "[", signature = c("transitionModel","character"),
+          definition = function(x,i) {
+            slot(x,i)
+          }
+)
 setReplaceMethod(f = "[", signature = "transitionModel",
                  definition = function(x, i,j, value) {
                    if(i=="demicTransition"){x@demicTransition<-value}
@@ -1175,3 +1240,17 @@ setReplaceMethod(f = "[", signature = "transitionModel",
 )
 
 
+setMethod("as",
+          signature="listOfNodes",
+          function(object,Class){
+            newObject <- list()
+            for (i in names(object)){
+              newObject[[i]] <- new("nodE",
+                                    nodeNo=object[[i]]@nodeNo,
+                                    ancestor=object[[i]]@ancestor,
+                                    age=object[[i]]@age,
+                                    descendants=object[[i]]@descendant)
+            }
+            new(Class,newObject)
+            }
+          )

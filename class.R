@@ -1,31 +1,81 @@
+model <- setClass("model",
+                  slots=c(model="character",type="character",variableName="character",parametersNames="character"),
+                  validity = function(object){
+                    if (!object@type%in%c("niche","mutation","dispersion")) stop("type must be one of c('niche', 'mutation', 'dispersion'")
+                    if ((object@model=="proportional")&(length(object@parametersName)!=1)) stop("proportional model has one parameter and one only")
+                    if ((object@model=="proportional")&(length(object@variableName)!=1)) stop("proportional model has one variable and one only")
+                    if ((object@model=="stepwise")&(length(object@parametersName)!=1)) stop("stepwise model has one parameter and one only")
+                    })
+
+instanceOfModel <- setClass("instanceOfModel",
+                            contains="model",
+                            slots=c(parameters="numeric"),
+                            validity = function(object){
+                              if (length(object@parametersNames)!=(length(object@parameters))) stop("length of @parameterNames differs form lenth of @parameters")
+                            })
+
+hyperModel <- setClass("priorModel",
+                       contains = "model",
+                       slots=c(hyperModel="character",hyperParameters="numeric"),
+                       validity = function(object){
+                         if (length(object@models)!=length(object@parameters)) stop("length of @models vector differs from length of @parameters list")
+                       })
+
+
+nicheModel <- setClass("nicheModel",
+                       slots=c("model","variableEnvironnemental","parameters"),
+                       validity = function(object){
+                         if (length(object@models)!=length(object@parameters)) stop("length of @models vector differs from length of @parameters list")
+                       })
+
+mutationModel <- setClass("mutationModel",
+                          slots=c("model","parameter"))
+
+dispersionModel <- setClass("dispersionModel",
+                            slots=c("model","parameter"))
+
+model <- setClass("model",
+                  slots=c("nicheModel","mutationModel","dispersionModel")
+                  )
 
 prior <- setClass("prior",
-                  contains="list") # add validity (contains K, R and mutation_rate)
+                  contains="list",
+                  validity = function(object){
+                    
+                  }) # add validity (contains K, R and mutation_rate)
 
 parameters <- setClass("parameters",
                        contains="list") # add validity (contains K, R and mutation_rate)
 
-allelicTransition <- setClass("allelicTransition",
+transitionList <- setClass("transitionList",
                               contains="list",
-                              validity=function(x){
-                                if(!lapply(x,"class")=="matrix") stop("allelicTransition is expected to be a list of matrix")})
+                              validity=function(object){
+                                if(!lapply(object,"class")=="matrix") stop("transitionList is expected to be a list of matrix")})
+
+populationTypeList <- setClass("populationTypeList",
+                      contains="list",
+                      validity=function(object){
+                        if(!lapply(object,"class")=="character") stop("pouplationTypeList is expected to be a list of matrix")})
+
 
 transitionModel <- setClass("transitionModel",
-                           slots = c(demicTransition="matrix",
-                                     allelicTransition="matrix",
+                           slots = c(transitionList="transitionList",
                                      Ne="numeric", 
-                                     demesNames="character", 
-                                     allelesNames="character", 
-                                     demicStatusOfStartingIndividuals="character", 
-                                     allelicStatusOfStartingIndividuals="character"),
+                                     populationTypeList="populationTypeList", 
+                                     populationTypeOfStartingIndividuals = "data.frame"),
                            validity = function(object){
-                                if(length(object@demicStatusOfStartingIndividuals)!=length(object@allelicStatusOfStartingIndividuals))  {stop("length of demicStatusOfStartingIndividuals differs from length of allelicStatusOfStartingIndividuals")}
-                                if(length(object@Ne)!=length(object@demesNames))  {stop("length of Ne differs from length of demesnames")}
-                                if(length(object@Ne)!=nrow(object@demicTransition))  {stop("length of Ne differs from number of rows and columns in demic transition matrix")}
-                                if(ncol(object@demicTransition)!=nrow(object@demicTransition))  {stop("demic transition matrix is not square")}
-                                if(length(object@allelesNames)!=nrow(object@allelicTransition))  {stop("length of allele names differs from nrow and ncols of demicTransition")}
-                                if(any(names(object@Ne)!=colnames(object@demicTransition))) {stop("names of slot Ne differs from colnames of slot demictransition")}
-                              }
+                             if (any(dim(object@transitionList)!=length(object@populationTypeList))) stop("one dimension of transitionList slot differs from length of populationTypeList slot")
+                             if (ncol(object@populationTypeOfStartingIndividuals)!=length(object@populationTypeList)) stop("ncol of populationTypeOfStartingIndividuals data.frame slot differs from length of populationTypeList slot")
+                             if (!("demic"%in%names(object@populationTypeList))) stop("'demic' is absent from names of object@populationTypeList")
+                             if (!("demic"%in%colnames(object@poulationTypeOfStartingIndividuals))) stop("'demic' is absent from in colnames of object@populationTypeOfStartingIndoviduals data.frame")
+                             if (length(object@populationTypeList[["demic"]])!=length(object@Ne)) stop ("length of Ne slot differs from length of populationTypeList slot")
+                             if (any(object@populationTypeList[["demic"]])!=names(object@Ne)) stop ("names of object@Ne differ from object@populationTypeList[['demic']]")
+                             if (!(all(names(object@transitionList)%in%names(object@populationTypeList))&
+                                     all(names(object@populationTypeList)%in%names(object@transitionList)))) stop ("names of object@transitionList differs from names of object@populationTypeList")
+                             if (any(names(object@transitionList)!=names(object@populationTypeList))) stop ("names of object@transitionList are not in the same order as names object@populationTypeList")
+                             for (Name in names(object@transitionList)){
+                               if (!all(object@populationTypeOfStartingIndividuals[,"Name"]%in%object@populationTypeList[[Name]])) stop (paste(which(!(object@populationTypeOfStartingIndividuals[,"Name"]%in%object@populationTypeList[[Name]]),"th starting individuals population type is not defined in  a object@populationType[['",Name,"']]")))
+                             }}
 ) 
 
 # nrow replace dim() because object is a matrix 
@@ -36,6 +86,19 @@ demeTransition <- setClass("demeTransition",
                            contains="RasterLayer")
 
 setClassUnion("numericOrNULL", c("numeric", "NULL"))
+
+nodE <- setClass("nodE",
+                   slots=c(nodeNo="integer",ancestor="integer",age="numeric",descendants="integer"),
+                   validity=function(object){
+                     if (length(object@ancestor)>1) stop("a node has at most one known ancestor")
+                   })
+
+listofnodEs <- setClass("listofnodEs",
+                   contains="list",
+                   validity=function(object){
+                     if (all(lapply(object,"class")=="nodE")) TRUE else FALSE
+                     })
+
 
 branchTransition <- setClass("branchTransition",
                              slots=c(age="numeric",ancestorAge="numeric",

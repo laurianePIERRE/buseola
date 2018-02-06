@@ -22,7 +22,6 @@ source("generic.R");source("method.R")
 source("Laurianne.R")
 load("Prior.rda")
 
-
 #
 # Create priors
 #

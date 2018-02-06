@@ -112,5 +112,11 @@ setGeneric(name="ordinary_laplacian",
 setGeneric(name="commute_time_undigraph",
            def=function(transitionMod){return("commute_time_undigraph")})
 
+setGeneric(name="commute_time_digraph",
+           def=function(transitionMod){return("commute_time_digraph")})
 
+setGeneric(name="hitting_time_digraph",
+           def=function(transitionMod){return("hitting_time_digraph")})
+
+commute_time_undigraph
            
